@@ -10,25 +10,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-
-class Product(models.Model):
-    name = models.TextField("Название")
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name="Категория")
-    size = models.ForeignKey(Size, on_delete=models.CASCADE, verbose_name="Размер")
-    season = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name="Сезон")
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name="Поставщик")
-    description = models.TextField("Описание", blank=True)
-    color = models.TextField("Цвет", blank=True)
-    stock = models.IntegerField(default=0, verbose_name="Количество на складе")
-
-    class Meta:
-        verbose_name = "Товар"
-        verbose_name_plural = "Товары"
-
-    def __str__(self):
-        return self.name
-
 class Size(models.Model):
     name = models.TextField("Название")
 
@@ -59,6 +40,24 @@ class Supplier(models.Model):
     class Meta:
         verbose_name = "Поставщик"
         verbose_name_plural = "Поставщики"
+
+    def __str__(self):
+        return self.name
+
+class Product(models.Model):
+    name = models.TextField("Название")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name="Категория")
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, verbose_name="Размер")
+    season = models.ForeignKey(Season, on_delete=models.CASCADE, verbose_name="Сезон")
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name="Поставщик")
+    description = models.TextField("Описание", blank=True)
+    color = models.TextField("Цвет", blank=True)
+    stock = models.IntegerField(default=0, verbose_name="Количество на складе")
+
+    class Meta:
+        verbose_name = "Товар"
+        verbose_name_plural = "Товары"
 
     def __str__(self):
         return self.name

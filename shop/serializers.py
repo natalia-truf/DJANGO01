@@ -6,24 +6,20 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name']
 
-
 class SizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Size
         fields = ['id', 'name']
-
 
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Season
         fields = ['id', 'name']
 
-
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
         fields = ['id', 'name', 'phone']
-
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
