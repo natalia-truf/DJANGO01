@@ -23,3 +23,37 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+class Size(models.Model):
+    name = models.TextField("Название")
+
+    class Meta:
+        verbose_name = "Размер"
+        verbose_name_plural = "Размеры"
+
+    def __str__(self):
+        return self.name
+
+
+class Season(models.Model):
+    name = models.TextField("Название")
+
+    class Meta:
+        verbose_name = "Сезон"
+        verbose_name_plural = "Сезоны"
+
+    def __str__(self):
+        return self.name
+
+
+class Supplier(models.Model):
+    name = models.TextField("Название")
+    phone = models.TextField("Телефон")
+    address = models.TextField("Адрес", blank=True)
+
+    class Meta:
+        verbose_name = "Поставщик"
+        verbose_name_plural = "Поставщики"
+
+    def __str__(self):
+        return self.name
