@@ -1,26 +1,26 @@
 from rest_framework import viewsets
-from shop.models import Category, Size, Season, Supplier, Product
+from shop.models import Product, Category, Supplier, PointOfSale, Order
 from shop.serializers import (
-    CategorySerializer, SizeSerializer, SeasonSerializer,
-    SupplierSerializer, ProductSerializer
+    ProductSerializer, CategorySerializer, SupplierSerializer,
+    PointOfSaleSerializer, OrderSerializer
 )
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-class SizeViewSet(viewsets.ModelViewSet):
-    queryset = Size.objects.all()
-    serializer_class = SizeSerializer
-
-class SeasonViewSet(viewsets.ModelViewSet):
-    queryset = Season.objects.all()
-    serializer_class = SeasonSerializer
-
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
 
+class PointOfSaleViewSet(viewsets.ModelViewSet):
+    queryset = PointOfSale.objects.all()
+    serializer_class = PointOfSaleSerializer
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
