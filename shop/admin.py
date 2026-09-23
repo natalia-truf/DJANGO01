@@ -15,8 +15,8 @@ class PointOfSaleAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'price', 'category', 'supplier', 'point', 'description']
+    list_display = ['name', 'price', 'category', 'supplier', 'description']
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'product', 'quantity', 'created_at']
+    list_display = ['id', 'product', 'point', 'quantity', 'created_at']

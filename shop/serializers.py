@@ -22,16 +22,16 @@ class PointOfSaleSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     supplier = SupplierSerializer(read_only=True)
-    point = PointOfSaleSerializer(read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'category', 'supplier', 'point', 'description']
+        fields = ['id', 'name', 'price', 'category', 'supplier', 'description']
 
 
 class OrderSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
+    point = PointOfSaleSerializer(read_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'product', 'quantity', 'created_at']
+        fields = ['id', 'product', 'point', 'quantity', 'created_at']

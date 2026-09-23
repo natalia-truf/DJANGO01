@@ -40,7 +40,6 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name="Категория")
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name="Поставщик")
-    point = models.ForeignKey(PointOfSale, on_delete=models.CASCADE, verbose_name="Точка продажи")
     description = models.TextField("Описание", blank=True)
 
     class Meta:
@@ -53,6 +52,7 @@ class Product(models.Model):
 
 class Order(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Товар")
+    point = models.ForeignKey(PointOfSale, on_delete=models.CASCADE, verbose_name="Точка продажи")
     quantity = models.IntegerField(default=1, verbose_name="Количество")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата заказа")
 
