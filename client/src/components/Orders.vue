@@ -34,7 +34,11 @@ async function onRemoveClick(order) {
 }
 
 function onOrderEditClick(order) {
-  orderToEdit.value = { ...order }
+  orderToEdit.value = {
+    ...order,
+    product_id: order.product?.id ?? order.product,
+    point_id: order.point?.id ?? order.point,
+  }
 }
 
 async function onUpdateOrder() {
@@ -50,28 +54,61 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div>
-    <h3>Заказы</h3>
+  <div class="container mt-4">
+    <h3 class="mb-4">Заказы</h3>
 
-    <form @submit.prevent.stop="onOrderAdd">
-      <select v-model="orderToAdd.product_id" required>
-        <option :value="p.id" v-for="p in products" :key="p.id">{{ p.name }}</option>
-      </select>
-      <select v-model="orderToAdd.point_id" required>
-        <option :value="pt.id" v-for="pt in points" :key="pt.id">{{ pt.name }}</option>
-      </select>
-      <input type="number" v-model="orderToAdd.quantity" placeholder="Количество" required />
-      <button>Добавить</button>
+    <form @submit.prevent.stop="onOrderAdd" class="mb-4">
+      <div class="row g-2">
+        <div class="col">
+          <div class="form-floating">
+            <select class="form-select" v-model="orderToAdd.product_id" required>
+              <option :value="p.id" v-for="p in products" :key="p.id">{{ p.name }}</option>
+            </select>
+            <label>Товар</label>
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-floating">
+            <select class="form-select" v-model="orderToAdd.point_id" required>
+              <option :value="pt.id" v-for="pt in points" :key="pt.id">{{ pt.name }}</option>
+            </select>
+            <label>Точка продажи</label>
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-floating">
+            <input type="number" class="form-control" v-model="orderToAdd.quantity" required />
+            <label>Количество</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary">Добавить</button>
+        </div>
+      </div>
     </form>
 
-    <div v-for="item in orders" :key="item.id" class="item">
-      <div>Заказ #{{ item.id }} — {{ item.product?.name }} — {{ item.quantity }} шт. — {{ item.point?.name }}</div>
-      <button @click="onOrderEditClick(item)" data-bs-toggle="modal" data-bs-target="#editOrderModal">
-        Редактировать
-      </button>
-      <button @click="onRemoveClick(item)">Удалить</button>
+    <div v-for="item in orders" :key="item.id" class="border rounded p-3 mb-2">
+      <div class="row align-items-center">
+        <div class="col-2">Заказ #{{ item.id }}</div>
+        <div class="col-3">{{ item.product?.name }}</div>
+        <div class="col-2 text-end">{{ item.quantity }} шт.</div>
+        <div class="col-3">{{ item.point?.name }}</div>
+
+        <div class="col-2 d-flex gap-3 justify-content-center">
+          <button class="btn btn-success"
+                  @click="onOrderEditClick(item)"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editOrderModal">
+            <i class="bi bi-pen-fill"></i>
+          </button>
+          <button class="btn btn-danger" @click="onRemoveClick(item)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
+    <!-- Модалка редактирования -->
     <div class="modal fade" id="editOrderModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -80,19 +117,26 @@ onBeforeMount(() => {
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <select v-model="orderToEdit.product_id">
-              <option :value="p.id" v-for="p in products" :key="p.id">{{ p.name }}</option>
-            </select>
-            <select v-model="orderToEdit.point_id">
-              <option :value="pt.id" v-for="pt in points" :key="pt.id">{{ pt.name }}</option>
-            </select>
-            <input type="number" v-model="orderToEdit.quantity" placeholder="Количество" />
+            <div class="form-floating mb-2">
+              <select class="form-select" v-model="orderToEdit.product_id">
+                <option :value="p.id" v-for="p in products" :key="p.id">{{ p.name }}</option>
+              </select>
+              <label>Товар</label>
+            </div>
+            <div class="form-floating mb-2">
+              <select class="form-select" v-model="orderToEdit.point_id">
+                <option :value="pt.id" v-for="pt in points" :key="pt.id">{{ pt.name }}</option>
+              </select>
+              <label>Точка продажи</label>
+            </div>
+            <div class="form-floating mb-2">
+              <input type="number" class="form-control" v-model="orderToEdit.quantity" />
+              <label>Количество</label>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdateOrder">
-              Сохранить
-            </button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdateOrder">Сохранить</button>
           </div>
         </div>
       </div>
@@ -101,5 +145,4 @@ onBeforeMount(() => {
 </template>
 
 <style scoped>
-.item { margin-bottom: 5px; }
 </style>
