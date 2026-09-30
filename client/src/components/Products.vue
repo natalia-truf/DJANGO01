@@ -12,12 +12,9 @@ const productAddImageUrl = ref()
 const productEditPictureRef = ref()
 const productEditImageUrl = ref()
 
-// Для галереи
 const galleryPictureRef = ref()
 const albumImages = ref([])
 const selectedProductForAlbum = ref({})
-
-// Для просмотра большой картинки
 const viewImageUrl = ref()
 
 async function fetchProducts() {
@@ -95,8 +92,6 @@ async function onUpdateProduct() {
   await fetchProducts()
 }
 
-// ========== Галерея ==========
-
 function onOpenAlbum(product) {
   selectedProductForAlbum.value = product
   albumImages.value = product.images || []
@@ -104,7 +99,6 @@ function onOpenAlbum(product) {
 
 async function onAddGalleryImage() {
   if (!galleryPictureRef.value?.files[0]) return
-
   const formData = new FormData()
   formData.append('picture', galleryPictureRef.value.files[0])
   formData.append('product', selectedProductForAlbum.value.id)
@@ -112,7 +106,6 @@ async function onAddGalleryImage() {
   await axios.post('/api/productimages/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
-
   await fetchProducts()
   const updated = products.value.find(p => p.id === selectedProductForAlbum.value.id)
   if (updated) {
@@ -140,44 +133,79 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div>
-    <h3>Товары</h3>
+  <div class="container mt-4">
+    <h3 class="mb-4">Товары</h3>
 
     <!-- Форма добавления -->
-    <form @submit.prevent.stop="onProductAdd">
-      <input type="text" v-model="productToAdd.name" placeholder="Название" required />
-      <input type="number" v-model="productToAdd.price" placeholder="Цена" required />
-      <select v-model="productToAdd.category_id" required>
-        <option :value="c.id" v-for="c in categories" :key="c.id">{{ c.name }}</option>
-      </select>
-      <select v-model="productToAdd.supplier_id" required>
-        <option :value="s.id" v-for="s in suppliers" :key="s.id">{{ s.name }}</option>
-      </select>
-      <input type="text" v-model="productToAdd.description" placeholder="Описание" />
-      <input type="file" ref="productsPictureRef" @change="productsAddPictureChange" />
-      <img :src="productAddImageUrl" style="max-height: 60px;" alt="">
-      <button>Добавить</button>
+    <form @submit.prevent.stop="onProductAdd" class="mb-4">
+      <div class="row g-2">
+        <div class="col">
+          <div class="form-floating">
+            <input type="text" class="form-control" v-model="productToAdd.name" required />
+            <label>Название</label>
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-floating">
+            <input type="number" step="0.01" class="form-control" v-model="productToAdd.price" required />
+            <label>Цена</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <input class="form-control" type="file" ref="productsPictureRef"
+                 @change="productsAddPictureChange" />
+        </div>
+        <div class="col-auto">
+          <div class="form-floating">
+            <select class="form-select" v-model="productToAdd.category_id" required>
+              <option :value="c.id" v-for="c in categories" :key="c.id">{{ c.name }}</option>
+            </select>
+            <label>Категория</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="form-floating">
+            <select class="form-select" v-model="productToAdd.supplier_id" required>
+              <option :value="s.id" v-for="s in suppliers" :key="s.id">{{ s.name }}</option>
+            </select>
+            <label>Поставщик</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary">Добавить</button>
+        </div>
+      </div>
     </form>
 
-    <!-- Список товаров -->
-    <div v-for="item in products" :key="item.id" class="item">
-      <div>{{ item.name }} — {{ item.price }} руб. — {{ item.category?.name }}</div>
+    <!-- Список -->
+    <div v-for="item in products" :key="item.id" class="border rounded p-3 mb-2">
+      <div class="row align-items-center">
+        <div class="col-3">{{ item.name }}</div>
+        <div class="col-2 text-end">{{ item.price }} руб.</div>
+        <div class="col-3 text-end">{{ item.category?.name }}</div>
 
-      <div v-if="item.picture">
-        <img :src="item.picture"
-             style="max-height: 60px; cursor: pointer;"
-             @click="onImageClick(item.picture)"
-             data-bs-toggle="modal"
-             data-bs-target="#viewImageModal" />
+        <div class="col-2 text-center">
+          <img v-if="item.picture"
+               :src="item.picture"
+               style="max-height: 60px;"
+               class="rounded"
+               @click="onImageClick(item.picture)"
+               data-bs-toggle="modal"
+               data-bs-target="#viewImageModal" />
+        </div>
+
+        <div class="col-2 d-flex gap-3 justify-content-center">
+          <button class="btn btn-success"
+                  @click="onProductEditClick(item)"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editProductModal">
+            <i class="bi bi-pen-fill"></i>
+          </button>
+          <button class="btn btn-danger" @click="onRemoveClick(item)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
       </div>
-
-      <button @click="onProductEditClick(item)" data-bs-toggle="modal" data-bs-target="#editProductModal">
-        Редактировать
-      </button>
-      <button @click="onRemoveClick(item)">Удалить</button>
-      <button @click="onOpenAlbum(item)" data-bs-toggle="modal" data-bs-target="#albumModal">
-        Альбом ({{ item.images?.length || 0 }})
-      </button>
     </div>
 
     <!-- Модалка редактирования -->
@@ -189,46 +217,43 @@ onBeforeMount(() => {
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div>
-              <input type="text" v-model="productToEdit.name" placeholder="Название" />
+            <div class="form-floating mb-2">
+              <input type="text" class="form-control" v-model="productToEdit.name" />
+              <label>Название</label>
             </div>
-            <div>
-              <input type="number" v-model="productToEdit.price" placeholder="Цена" />
+            <div class="form-floating mb-2">
+              <input type="number" step="0.01" class="form-control" v-model="productToEdit.price" />
+              <label>Цена</label>
             </div>
-            <div>
-              <select v-model="productToEdit.category_id">
+            <div class="form-floating mb-2">
+              <select class="form-select" v-model="productToEdit.category_id">
                 <option :value="c.id" v-for="c in categories" :key="c.id">{{ c.name }}</option>
               </select>
+              <label>Категория</label>
             </div>
-            <div>
-              <select v-model="productToEdit.supplier_id">
+            <div class="form-floating mb-2">
+              <select class="form-select" v-model="productToEdit.supplier_id">
                 <option :value="s.id" v-for="s in suppliers" :key="s.id">{{ s.name }}</option>
               </select>
+              <label>Поставщик</label>
             </div>
-            <div>
-              <input type="text" v-model="productToEdit.description" placeholder="Описание" />
-            </div>
-            <div>
-              <input type="file" ref="productEditPictureRef" @change="productsEditPictureChange" />
-              <img :src="productEditImageUrl" style="max-height: 60px;" alt="">
-            </div>
+            <input type="file" class="form-control" ref="productEditPictureRef" @change="productsEditPictureChange" />
+            <img :src="productEditImageUrl" style="max-height: 60px;" class="rounded mt-2" alt="">
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdateProduct">
-              Сохранить
-            </button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdateProduct">Сохранить</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Модалка просмотра одной картинки -->
+    <!-- Модалка просмотра -->
     <div class="modal fade" id="viewImageModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-body text-center">
-            <img :src="viewImageUrl" style="max-width: 100%; max-height: 80vh;" alt="" />
+            <img :src="viewImageUrl" class="img-fluid rounded" style="max-height: 80vh;" alt="" />
           </div>
         </div>
       </div>
@@ -243,23 +268,23 @@ onBeforeMount(() => {
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div class="mb-3">
-              <input type="file" ref="galleryPictureRef" />
-              <button @click="onAddGalleryImage">Добавить фото</button>
+            <div class="d-flex gap-2 mb-3">
+              <input type="file" class="form-control" ref="galleryPictureRef" />
+              <button class="btn btn-primary" @click="onAddGalleryImage">Добавить фото</button>
             </div>
-
-            <div class="d-flex flex-wrap">
-              <div v-for="img in albumImages" :key="img.id" style="margin: 5px;">
+            <div class="d-flex flex-wrap gap-2">
+              <div v-for="img in albumImages" :key="img.id">
                 <img :src="img.picture"
-                     style="max-height: 100px; cursor: pointer;"
+                     style="max-height: 100px;"
+                     class="rounded"
                      @click="onImageClick(img.picture)"
                      data-bs-toggle="modal"
                      data-bs-target="#viewImageModal" />
-                <button  @click="onRemoveGalleryImage(img)">✖</button>
+                <button class="btn btn-danger" @click="onRemoveGalleryImage(img)">
+                  <i class="bi bi-x"></i>
+                </button>
               </div>
             </div>
-
-            <div v-if="albumImages.length === 0">Фото пока нет</div>
           </div>
         </div>
       </div>
@@ -268,9 +293,4 @@ onBeforeMount(() => {
 </template>
 
 <style scoped>
-.item {
-  margin-bottom: 10px;
-  padding: 5px;
-  border-bottom: 1px solid #eee;
-}
 </style>
