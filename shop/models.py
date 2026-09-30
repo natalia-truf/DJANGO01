@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Category(models.Model):
     name = models.TextField("Название")
     picture = models.ImageField("Изображение", null=True, upload_to="categories")
@@ -64,3 +65,16 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Заказ #{self.id}"
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,
+                                 related_name='images', verbose_name="Товар")
+    picture = models.ImageField("Изображение", upload_to="products")
+
+    class Meta:
+        verbose_name = "Фото товара"
+        verbose_name_plural = "Фото товаров"
+
+    def __str__(self):
+        return f"Фото #{self.id} для {self.product.name}"

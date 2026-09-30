@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from shop.models import Product, Category, Supplier, PointOfSale, Order
+from shop.models import Product, Category, Supplier, PointOfSale, Order, ProductImage
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +19,12 @@ class PointOfSaleSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'address']
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'product', 'picture']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     supplier = SupplierSerializer(read_only=True)
@@ -28,11 +34,12 @@ class ProductSerializer(serializers.ModelSerializer):
     supplier_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(), source='supplier', write_only=True
     )
+    images = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
         fields = ['id', 'name', 'price', 'category', 'category_id',
-                  'supplier', 'supplier_id', 'description', 'picture']
+                  'supplier', 'supplier_id', 'description', 'picture', 'images']
 
 
 class OrderSerializer(serializers.ModelSerializer):

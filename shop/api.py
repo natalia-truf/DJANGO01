@@ -1,8 +1,8 @@
 from rest_framework import viewsets
-from shop.models import Product, Category, Supplier, PointOfSale, Order
+from shop.models import Product, Category, Supplier, PointOfSale, Order, ProductImage
 from shop.serializers import (
     ProductSerializer, CategorySerializer, SupplierSerializer,
-    PointOfSaleSerializer, OrderSerializer
+    PointOfSaleSerializer, OrderSerializer, ProductImageSerializer
 )
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -24,3 +24,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+
+class ProductImageViewSet(viewsets.ModelViewSet):
+    queryset = ProductImage.objects.all()
+    serializer_class = ProductImageSerializer

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from shop.models import Category, Supplier, PointOfSale, Product, Order
+from shop.models import Category, Supplier, PointOfSale, Product, Order, ProductImage
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -20,3 +20,7 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'product', 'point', 'quantity', 'created_at']
+
+@admin.register(ProductImage)
+class ProductImageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'product', 'picture']

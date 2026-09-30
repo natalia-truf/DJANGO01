@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from rest_framework import routers
 from shop.api import (
     ProductViewSet, CategoryViewSet, SupplierViewSet,
-    PointOfSaleViewSet, OrderViewSet
+    PointOfSaleViewSet, OrderViewSet, ProductImageViewSet
 )
 
 router = routers.DefaultRouter()
@@ -14,6 +14,7 @@ router.register(r'categories', CategoryViewSet)
 router.register(r'suppliers', SupplierViewSet)
 router.register(r'points', PointOfSaleViewSet)
 router.register(r'orders', OrderViewSet)
+router.register(r'productimages', ProductImageViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
