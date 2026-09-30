@@ -1,8 +1,12 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
-let a = ref(13);
-let b = ref(23);
+const a = ref(13);
+const b = ref(23);
+
+const c = computed(() => {
+  return a.value + b.value;
+})
 </script>
 
 <template>
@@ -10,6 +14,6 @@ let b = ref(23);
     <input type="number" v-model="a"><br>
     <input type="number" v-model="b">
     <br>
-    <b>{{ a }} + {{ b }}</b> <span>= {{ a + b }}</span>
+    <b>{{ a }} + {{ b }}</b> <span>= {{ c }}</span><br>
   </div>
 </template>
