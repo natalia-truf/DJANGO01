@@ -34,7 +34,7 @@ onBeforeMount(fetchSuppliers)
 </script>
 
 <template>
-  <div class="container mt-4">
+  <div class=" mt-4">
     <h3 class="mb-4">Поставщики</h3>
 
     <form @submit.prevent.stop="onSupplierAdd" class="mb-4">

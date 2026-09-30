@@ -34,7 +34,7 @@ onBeforeMount(fetchPoints)
 </script>
 
 <template>
-  <div class="container mt-4">
+  <div class=" mt-4">
     <h3 class="mb-4">Точки продажи</h3>
 
     <form @submit.prevent.stop="onPointAdd" class="mb-4">

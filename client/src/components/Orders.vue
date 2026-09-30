@@ -54,7 +54,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div class="container mt-4">
+  <div class=" mt-4">
     <h3 class="mb-4">Заказы</h3>
 
     <form @submit.prevent.stop="onOrderAdd" class="mb-4">
