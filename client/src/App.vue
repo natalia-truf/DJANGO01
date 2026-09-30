@@ -1,19 +1,26 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { onBeforeMount } from 'vue'
+import axios from 'axios'
+import Cookies from 'js-cookie'
 
-const a = ref(13);
-const b = ref(23);
-
-const c = computed(() => {
-  return a.value + b.value;
+onBeforeMount(() => {
+  axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken")
 })
 </script>
 
 <template>
-  <div>
-    <input type="number" v-model="a"><br>
-    <input type="number" v-model="b">
-    <br>
-    <b>{{ a }} + {{ b }}</b> <span>= {{ c }}</span><br>
-  </div>
+  <nav>
+    <router-link to="/categories">Категории</router-link> |
+    <router-link to="/suppliers">Поставщики</router-link> |
+    <router-link to="/points">Точки продажи</router-link> |
+    <router-link to="/products">Товары</router-link> |
+    <router-link to="/orders">Заказы</router-link> |
+
+    <!-- Кнопка входа в админку -->
+    <a href="/admin">Админка</a>
+  </nav>
+
+  <hr>
+
+  <router-view />
 </template>

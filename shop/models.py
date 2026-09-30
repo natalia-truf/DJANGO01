@@ -2,6 +2,7 @@ from django.db import models
 
 class Category(models.Model):
     name = models.TextField("Название")
+    picture = models.ImageField("Изображение", null=True, upload_to="categories")
 
     class Meta:
         verbose_name = "Категория"
@@ -41,6 +42,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name="Категория")
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name="Поставщик")
     description = models.TextField("Описание", blank=True)
+    picture = models.ImageField("Изображение", null=True, upload_to="products")
 
     class Meta:
         verbose_name = "Товар"

@@ -37,3 +37,8 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+__pycache__
+*.sqlite3
+.conda
+media
