@@ -1,11 +1,15 @@
 <script setup>
+import { ref } from 'vue';
 
-let a = 13;
-
+let a = ref(13);
+let b = ref(23);
 </script>
 
-a = {{a}}
+<template>
+  <div>
+    <input type="number" v-model="a"><br>
+    <input type="number" v-model="b">
+    <br>
+    <b>{{ a }} + {{ b }}</b> <span>= {{ a + b }}</span>
+  </div>
 </template>
-
-<style scoped>
-</style>
