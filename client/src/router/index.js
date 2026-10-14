@@ -1,18 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Categories from '@/components/Categories.vue'
-import Suppliers from '@/components/Suppliers.vue'
-import Points from '@/components/Points.vue'
-import Products from '@/components/Products.vue'
-import Orders from '@/components/Orders.vue'
+import CategoriesView from '@/views/CategoriesView.vue'
+import SuppliersView from '@/views/SuppliersView.vue'
+import PointsView from '@/views/PointsView.vue'
+import ProductsView from '@/views/ProductsView.vue'
+import OrdersView from '@/views/OrdersView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/categories', component: Categories },
-    { path: '/suppliers', component: Suppliers },
-    { path: '/points', component: Points },
-    { path: '/products', component: Products },
-    { path: '/orders', component: Orders },
+    { path: '/products', component: ProductsView },
+    { path: '/categories', component: CategoriesView },
+    { path: '/suppliers', component: SuppliersView },
+    { path: '/points', component: PointsView },
+    { path: '/orders', component: OrdersView },
   ]
 })
 
