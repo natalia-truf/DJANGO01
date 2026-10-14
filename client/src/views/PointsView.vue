@@ -76,7 +76,6 @@ onBeforeMount(fetchPoints)
       </div>
     </div>
 
-    <!-- Модалка редактирования -->
     <div class="modal fade" id="editPointModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -95,7 +94,7 @@ onBeforeMount(fetchPoints)
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdatePoint">Сохранить</button>
           </div>
         </div>

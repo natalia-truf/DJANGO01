@@ -15,7 +15,6 @@ const galleryPictureRef = ref()
 const albumImages = ref([])
 const selectedProductForAlbum = ref({})
 const viewImageUrl = ref()
-const currentIndex = ref(0)
 
 async function fetchProducts() {
   products.value = (await axios.get('/api/products/')).data
@@ -72,19 +71,9 @@ async function onUpdateProduct() {
   await fetchProducts()
 }
 
-// ========== Альбом ==========
 function onOpenAlbum(product) {
   selectedProductForAlbum.value = product
   albumImages.value = product.images || []
-  currentIndex.value = 0
-}
-function prevImage() {
-  if (currentIndex.value > 0) currentIndex.value--
-  else currentIndex.value = albumImages.value.length - 1
-}
-function nextImage() {
-  if (currentIndex.value < albumImages.value.length - 1) currentIndex.value++
-  else currentIndex.value = 0
 }
 
 async function refreshAlbum() {
@@ -93,7 +82,6 @@ async function refreshAlbum() {
   if (updated) {
     selectedProductForAlbum.value = updated
     albumImages.value = updated.images
-    if (currentIndex.value >= albumImages.value.length) currentIndex.value = 0
   }
 }
 
@@ -105,12 +93,10 @@ async function onGalleryFileChange() {
   await axios.post('/api/productimages/', fd)
   await refreshAlbum()
   galleryPictureRef.value.value = ''
-  currentIndex.value = albumImages.value.length - 1
 }
 
-async function onRemoveGalleryImage() {
-  if (albumImages.value.length === 0) return
-  await axios.delete(`/api/productimages/${albumImages.value[currentIndex.value].id}/`)
+async function onRemoveGalleryImage(image) {
+  await axios.delete(`/api/productimages/${image.id}/`)
   await refreshAlbum()
 }
 
@@ -179,7 +165,6 @@ onBeforeMount(() => {
       </div>
     </div>
 
-    <!-- Модалка редактирования -->
     <div class="modal fade" id="editProductModal" tabindex="-1">
       <div class="modal-dialog"><div class="modal-content">
         <div class="modal-header">
@@ -207,13 +192,12 @@ onBeforeMount(() => {
           <img :src="productEditImageUrl" style="max-height: 60px;" class="rounded mt-2" alt="">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
           <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdateProduct">Сохранить</button>
         </div>
       </div></div>
     </div>
 
-    <!-- Модалка просмотра одной картинки -->
     <div class="modal fade" id="viewImageModal" tabindex="-1">
       <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-body text-center">
@@ -222,7 +206,6 @@ onBeforeMount(() => {
       </div></div>
     </div>
 
-    <!-- Модалка альбома -->
     <div class="modal fade" id="albumModal" tabindex="-1">
       <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header">
@@ -236,22 +219,33 @@ onBeforeMount(() => {
             <button type="button" class="btn btn-primary" @click="galleryPictureRef.click()">Добавить фото</button>
           </div>
 
-          <div v-if="albumImages.length > 0" class="text-center">
-            <div class="d-flex align-items-center justify-content-center gap-3">
-              <button class="btn btn-secondary" @click="prevImage"><i class="bi bi-arrow-left"></i></button>
-              <img :src="albumImages[currentIndex].picture" style="max-height: 300px;" class="rounded" />
-              <button class="btn btn-secondary" @click="nextImage"><i class="bi bi-arrow-right"></i></button>
+          <div v-if="albumImages.length > 0">
+            <div :key="albumImages.length" id="albumCarousel" class="carousel slide">
+              <div class="carousel-inner">
+                <div v-for="(img, index) in albumImages"
+                     :key="img.id"
+                     class="carousel-item"
+                     :class="{ active: index === 0 }">
+                  <img :src="img.picture" class="d-block w-100" style="max-height: 400px; object-fit: contain;" />
+                  <div class="text-center mt-2">
+                    <button class="btn btn-danger" @click="onRemoveGalleryImage(img)">Удалить это фото</button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="carousel-control-prev" type="button" data-bs-target="#albumCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+                <span class="visually-hidden">Предыдущий</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#albumCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+                <span class="visually-hidden">Следующий</span>
+              </button>
             </div>
-            <div class="mt-2">{{ currentIndex + 1 }} / {{ albumImages.length }}</div>
           </div>
 
           <div v-else>Фото пока нет</div>
 
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-danger" @click="onRemoveGalleryImage" :disabled="albumImages.length === 0">
-            Удалить
-          </button>
         </div>
       </div></div>
     </div>
