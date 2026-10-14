@@ -86,22 +86,8 @@ function nextImage() {
   if (currentIndex.value < albumImages.value.length - 1) currentIndex.value++
   else currentIndex.value = 0
 }
-async function onAddGalleryImage() {
-  if (!galleryPictureRef.value?.files[0]) return
-  const fd = new FormData()
-  fd.append('picture', galleryPictureRef.value.files[0])
-  fd.append('product', selectedProductForAlbum.value.id)
-  await axios.post('/api/productimages/', fd)
-  await fetchProducts()
-  const updated = products.value.find(p => p.id === selectedProductForAlbum.value.id)
-  if (updated) {
-    selectedProductForAlbum.value = updated
-    albumImages.value = updated.images
-  }
-  galleryPictureRef.value.value = ''
-}
-async function onRemoveGalleryImage(image) {
-  await axios.delete(`/api/productimages/${image.id}/`)
+
+async function refreshAlbum() {
   await fetchProducts()
   const updated = products.value.find(p => p.id === selectedProductForAlbum.value.id)
   if (updated) {
@@ -109,6 +95,23 @@ async function onRemoveGalleryImage(image) {
     albumImages.value = updated.images
     if (currentIndex.value >= albumImages.value.length) currentIndex.value = 0
   }
+}
+
+async function onGalleryFileChange() {
+  if (!galleryPictureRef.value?.files[0]) return
+  const fd = new FormData()
+  fd.append('picture', galleryPictureRef.value.files[0])
+  fd.append('product', selectedProductForAlbum.value.id)
+  await axios.post('/api/productimages/', fd)
+  await refreshAlbum()
+  galleryPictureRef.value.value = ''
+  currentIndex.value = albumImages.value.length - 1
+}
+
+async function onRemoveGalleryImage() {
+  if (albumImages.value.length === 0) return
+  await axios.delete(`/api/productimages/${albumImages.value[currentIndex.value].id}/`)
+  await refreshAlbum()
 }
 
 onBeforeMount(() => {
@@ -229,30 +232,26 @@ onBeforeMount(() => {
         <div class="modal-body">
 
           <div class="d-flex gap-2 mb-3">
-            <input type="file" class="form-control" ref="galleryPictureRef" />
-            <button class="btn btn-primary" @click="onAddGalleryImage">Добавить фото</button>
+            <input type="file" class="form-control" ref="galleryPictureRef" @change="onGalleryFileChange" />
+            <button type="button" class="btn btn-primary" @click="galleryPictureRef.click()">Добавить фото</button>
           </div>
 
           <div v-if="albumImages.length > 0" class="text-center">
             <div class="d-flex align-items-center justify-content-center gap-3">
-              <button class="btn btn-secondary" @click="prevImage">
-                <i class="bi bi-arrow-left"></i>
-              </button>
+              <button class="btn btn-secondary" @click="prevImage"><i class="bi bi-arrow-left"></i></button>
               <img :src="albumImages[currentIndex].picture" style="max-height: 300px;" class="rounded" />
-              <button class="btn btn-secondary" @click="nextImage">
-                <i class="bi bi-arrow-right"></i>
-              </button>
+              <button class="btn btn-secondary" @click="nextImage"><i class="bi bi-arrow-right"></i></button>
             </div>
             <div class="mt-2">{{ currentIndex + 1 }} / {{ albumImages.length }}</div>
-            <div class="mt-2">
-              <button class="btn btn-danger" @click="onRemoveGalleryImage(albumImages[currentIndex])">
-                Удалить это фото
-              </button>
-            </div>
           </div>
 
           <div v-else>Фото пока нет</div>
 
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-danger" @click="onRemoveGalleryImage" :disabled="albumImages.length === 0">
+            Удалить
+          </button>
         </div>
       </div></div>
     </div>
