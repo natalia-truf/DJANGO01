@@ -15,19 +15,18 @@ const galleryPictureRef = ref()
 const albumImages = ref([])
 const selectedProductForAlbum = ref({})
 const viewImageUrl = ref()
+const currentIndex = ref(0)
 
 async function fetchProducts() {
-  const r = await axios.get('/api/products/')
-  products.value = r.data
+  products.value = (await axios.get('/api/products/')).data
 }
 async function fetchCategories() {
-  const r = await axios.get('/api/categories/')
-  categories.value = r.data
+  categories.value = (await axios.get('/api/categories/')).data
 }
 async function fetchSuppliers() {
-  const r = await axios.get('/api/suppliers/')
-  suppliers.value = r.data
+  suppliers.value = (await axios.get('/api/suppliers/')).data
 }
+
 function productsAddPictureChange() {
   productAddImageUrl.value = URL.createObjectURL(productsPictureRef.value.files[0])
 }
@@ -37,15 +36,16 @@ function productsEditPictureChange() {
 function onImageClick(url) {
   viewImageUrl.value = url
 }
+
 async function onProductAdd() {
-  const formData = new FormData()
-  if (productsPictureRef.value?.files[0]) formData.append('picture', productsPictureRef.value.files[0])
-  formData.set('name', productToAdd.value.name)
-  formData.set('price', productToAdd.value.price)
-  formData.set('category_id', productToAdd.value.category_id)
-  formData.set('supplier_id', productToAdd.value.supplier_id)
-  formData.set('description', productToAdd.value.description || '')
-  await axios.post("/api/products/", formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  const fd = new FormData()
+  if (productsPictureRef.value?.files[0]) fd.append('picture', productsPictureRef.value.files[0])
+  fd.set('name', productToAdd.value.name)
+  fd.set('price', productToAdd.value.price)
+  fd.set('category_id', productToAdd.value.category_id)
+  fd.set('supplier_id', productToAdd.value.supplier_id)
+  fd.set('description', productToAdd.value.description || '')
+  await axios.post('/api/products/', fd)
   await fetchProducts()
 }
 async function onRemoveClick(product) {
@@ -61,19 +61,30 @@ function onProductEditClick(product) {
   productEditImageUrl.value = product.picture
 }
 async function onUpdateProduct() {
-  const formData = new FormData()
-  if (productEditPictureRef.value?.files[0]) formData.append('picture', productEditPictureRef.value.files[0])
-  formData.set('name', productToEdit.value.name)
-  formData.set('price', productToEdit.value.price)
-  formData.set('category_id', productToEdit.value.category_id)
-  formData.set('supplier_id', productToEdit.value.supplier_id)
-  formData.set('description', productToEdit.value.description || '')
-  await axios.put(`/api/products/${productToEdit.value.id}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  const fd = new FormData()
+  if (productEditPictureRef.value?.files[0]) fd.append('picture', productEditPictureRef.value.files[0])
+  fd.set('name', productToEdit.value.name)
+  fd.set('price', productToEdit.value.price)
+  fd.set('category_id', productToEdit.value.category_id)
+  fd.set('supplier_id', productToEdit.value.supplier_id)
+  fd.set('description', productToEdit.value.description || '')
+  await axios.put(`/api/products/${productToEdit.value.id}/`, fd)
   await fetchProducts()
 }
+
+// ========== Альбом ==========
 function onOpenAlbum(product) {
   selectedProductForAlbum.value = product
   albumImages.value = product.images || []
+  currentIndex.value = 0
+}
+function prevImage() {
+  if (currentIndex.value > 0) currentIndex.value--
+  else currentIndex.value = albumImages.value.length - 1
+}
+function nextImage() {
+  if (currentIndex.value < albumImages.value.length - 1) currentIndex.value++
+  else currentIndex.value = 0
 }
 async function onAddGalleryImage() {
   if (!galleryPictureRef.value?.files[0]) return
@@ -83,17 +94,28 @@ async function onAddGalleryImage() {
   await axios.post('/api/productimages/', fd)
   await fetchProducts()
   const updated = products.value.find(p => p.id === selectedProductForAlbum.value.id)
-  if (updated) { selectedProductForAlbum.value = updated; albumImages.value = updated.images }
+  if (updated) {
+    selectedProductForAlbum.value = updated
+    albumImages.value = updated.images
+  }
   galleryPictureRef.value.value = ''
 }
 async function onRemoveGalleryImage(image) {
   await axios.delete(`/api/productimages/${image.id}/`)
   await fetchProducts()
   const updated = products.value.find(p => p.id === selectedProductForAlbum.value.id)
-  if (updated) { selectedProductForAlbum.value = updated; albumImages.value = updated.images }
+  if (updated) {
+    selectedProductForAlbum.value = updated
+    albumImages.value = updated.images
+    if (currentIndex.value >= albumImages.value.length) currentIndex.value = 0
+  }
 }
 
-onBeforeMount(() => { fetchProducts(); fetchCategories(); fetchSuppliers() })
+onBeforeMount(() => {
+  fetchProducts()
+  fetchCategories()
+  fetchSuppliers()
+})
 </script>
 
 <template>
@@ -154,6 +176,7 @@ onBeforeMount(() => { fetchProducts(); fetchCategories(); fetchSuppliers() })
       </div>
     </div>
 
+    <!-- Модалка редактирования -->
     <div class="modal fade" id="editProductModal" tabindex="-1">
       <div class="modal-dialog"><div class="modal-content">
         <div class="modal-header">
@@ -187,6 +210,7 @@ onBeforeMount(() => { fetchProducts(); fetchCategories(); fetchSuppliers() })
       </div></div>
     </div>
 
+    <!-- Модалка просмотра одной картинки -->
     <div class="modal fade" id="viewImageModal" tabindex="-1">
       <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-body text-center">
@@ -195,6 +219,7 @@ onBeforeMount(() => { fetchProducts(); fetchCategories(); fetchSuppliers() })
       </div></div>
     </div>
 
+    <!-- Модалка альбома -->
     <div class="modal fade" id="albumModal" tabindex="-1">
       <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header">
@@ -202,17 +227,32 @@ onBeforeMount(() => { fetchProducts(); fetchCategories(); fetchSuppliers() })
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+
           <div class="d-flex gap-2 mb-3">
             <input type="file" class="form-control" ref="galleryPictureRef" />
             <button class="btn btn-primary" @click="onAddGalleryImage">Добавить фото</button>
           </div>
-          <div class="d-flex flex-wrap gap-2">
-            <div v-for="img in albumImages" :key="img.id">
-              <img :src="img.picture" style="max-height: 100px;" class="rounded"
-                   @click="onImageClick(img.picture)" data-bs-toggle="modal" data-bs-target="#viewImageModal" />
-              <button class="btn btn-danger" @click="onRemoveGalleryImage(img)"><i class="bi bi-x"></i></button>
+
+          <div v-if="albumImages.length > 0" class="text-center">
+            <div class="d-flex align-items-center justify-content-center gap-3">
+              <button class="btn btn-secondary" @click="prevImage">
+                <i class="bi bi-arrow-left"></i>
+              </button>
+              <img :src="albumImages[currentIndex].picture" style="max-height: 300px;" class="rounded" />
+              <button class="btn btn-secondary" @click="nextImage">
+                <i class="bi bi-arrow-right"></i>
+              </button>
+            </div>
+            <div class="mt-2">{{ currentIndex + 1 }} / {{ albumImages.length }}</div>
+            <div class="mt-2">
+              <button class="btn btn-danger" @click="onRemoveGalleryImage(albumImages[currentIndex])">
+                Удалить это фото
+              </button>
             </div>
           </div>
+
+          <div v-else>Фото пока нет</div>
+
         </div>
       </div></div>
     </div>
