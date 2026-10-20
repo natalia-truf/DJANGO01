@@ -1,4 +1,30 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+class Profile(models.Model):
+    ROLE_CHOICES = [
+        ('buyer', 'Покупатель'),
+        ('seller', 'Продавец'),
+        ('admin', 'Администратор'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='buyer', verbose_name="Роль")
+
+    class Meta:
+        verbose_name = "Профиль"
+        verbose_name_plural = "Профили"
+
+    def __str__(self):
+        return f"{self.user.username} ({self.get_role_display()})"
+
+
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
 
 
 class Category(models.Model):
@@ -54,6 +80,7 @@ class Product(models.Model):
 
 
 class Order(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь", null=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Товар")
     point = models.ForeignKey(PointOfSale, on_delete=models.CASCADE, verbose_name="Точка продажи")
     quantity = models.IntegerField(default=1, verbose_name="Количество")

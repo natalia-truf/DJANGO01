@@ -51,7 +51,7 @@ onBeforeMount(fetchCategories)
 </script>
 
 <template>
-  <div class="mt-4">
+  <div>
     <h3 class="mb-4">Категории</h3>
 
     <form @submit.prevent.stop="onCategoryAdd" class="mb-4">

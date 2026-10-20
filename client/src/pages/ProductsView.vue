@@ -108,7 +108,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div class="mt-4">
+  <div>
     <h3 class="mb-4">Товары</h3>
 
     <form @submit.prevent.stop="onProductAdd" class="mb-4">

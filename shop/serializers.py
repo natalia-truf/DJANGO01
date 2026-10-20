@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from shop.models import Product, Category, Supplier, PointOfSale, Order, ProductImage
+from shop.models import Product, Category, Supplier, PointOfSale, Order, ProductImage, Profile
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'username', 'role']
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,8 +60,15 @@ class OrderSerializer(serializers.ModelSerializer):
     point_id = serializers.PrimaryKeyRelatedField(
         queryset=PointOfSale.objects.all(), source='point', write_only=True
     )
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    def create(self, validated_data):
+        if 'request' in self.context:
+            validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
     class Meta:
         model = Order
         fields = ['id', 'product', 'product_id', 'point', 'point_id',
-                  'quantity', 'created_at']
+                  'quantity', 'created_at', 'user', 'username']
+        read_only_fields = ['user']

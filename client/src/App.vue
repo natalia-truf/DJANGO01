@@ -1,18 +1,12 @@
 <script setup>
-import { onBeforeMount } from 'vue'
-import axios from 'axios'
-import Cookies from 'js-cookie'
-import Navbar from '@/components/Navbar.vue'
-
-onBeforeMount(() => {
-  axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken")
-})
+import NavBar from './components/NavBar.vue'
 </script>
 
 <template>
-  <Navbar />
-
-  <div class="container-fluid px-4">
-    <router-view />
+  <nav-bar></nav-bar>
+  <div class="container-fluid px-4 px-md-5 mt-4">
+    <router-view></router-view>
   </div>
 </template>
+
+<style scoped></style>

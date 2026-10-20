@@ -2,53 +2,53 @@
 import { ref, onBeforeMount } from 'vue'
 import axios from 'axios'
 
-const points = ref([])
-const pointToAdd = ref({})
-const pointToEdit = ref({})
+const suppliers = ref([])
+const supplierToAdd = ref({})
+const supplierToEdit = ref({})
 
-async function fetchPoints() {
-  const r = await axios.get('/api/points/')
-  points.value = r.data
+async function fetchSuppliers() {
+  const r = await axios.get('/api/suppliers/')
+  suppliers.value = r.data
 }
 
-async function onPointAdd() {
-  await axios.post('/api/points/', { ...pointToAdd.value })
-  await fetchPoints()
+async function onSupplierAdd() {
+  await axios.post('/api/suppliers/', { ...supplierToAdd.value })
+  await fetchSuppliers()
 }
 
-async function onRemoveClick(point) {
-  await axios.delete(`/api/points/${point.id}/`)
-  await fetchPoints()
+async function onRemoveClick(supplier) {
+  await axios.delete(`/api/suppliers/${supplier.id}/`)
+  await fetchSuppliers()
 }
 
-function onPointEditClick(point) {
-  pointToEdit.value = { ...point }
+function onSupplierEditClick(supplier) {
+  supplierToEdit.value = { ...supplier }
 }
 
-async function onUpdatePoint() {
-  await axios.put(`/api/points/${pointToEdit.value.id}/`, { ...pointToEdit.value })
-  await fetchPoints()
+async function onUpdateSupplier() {
+  await axios.put(`/api/suppliers/${supplierToEdit.value.id}/`, { ...supplierToEdit.value })
+  await fetchSuppliers()
 }
 
-onBeforeMount(fetchPoints)
+onBeforeMount(fetchSuppliers)
 </script>
 
 <template>
-  <div class=" mt-4">
-    <h3 class="mb-4">Точки продажи</h3>
+  <div>
+    <h3 class="mb-4">Поставщики</h3>
 
-    <form @submit.prevent.stop="onPointAdd" class="mb-4">
+    <form @submit.prevent.stop="onSupplierAdd" class="mb-4">
       <div class="row g-2">
         <div class="col">
           <div class="form-floating">
-            <input type="text" class="form-control" v-model="pointToAdd.name" required />
+            <input type="text" class="form-control" v-model="supplierToAdd.name" required />
             <label>Название</label>
           </div>
         </div>
         <div class="col">
           <div class="form-floating">
-            <input type="text" class="form-control" v-model="pointToAdd.address" required />
-            <label>Адрес</label>
+            <input type="text" class="form-control" v-model="supplierToAdd.phone" required />
+            <label>Телефон</label>
           </div>
         </div>
         <div class="col-auto">
@@ -57,16 +57,16 @@ onBeforeMount(fetchPoints)
       </div>
     </form>
 
-    <div v-for="item in points" :key="item.id" class="border rounded p-3 mb-2">
+    <div v-for="item in suppliers" :key="item.id" class="border rounded p-3 mb-2">
       <div class="row align-items-center">
         <div class="col-5">{{ item.name }}</div>
-        <div class="col-4">{{ item.address }}</div>
+        <div class="col-4">{{ item.phone }}</div>
 
         <div class="col-3 d-flex gap-3 justify-content-center">
           <button class="btn btn-success"
-                  @click="onPointEditClick(item)"
+                  @click="onSupplierEditClick(item)"
                   data-bs-toggle="modal"
-                  data-bs-target="#editPointModal">
+                  data-bs-target="#editSupplierModal">
             <i class="bi bi-pen-fill"></i>
           </button>
           <button class="btn btn-danger" @click="onRemoveClick(item)">
@@ -76,7 +76,7 @@ onBeforeMount(fetchPoints)
       </div>
     </div>
 
-    <div class="modal fade" id="editPointModal" tabindex="-1">
+    <div class="modal fade" id="editSupplierModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -85,17 +85,17 @@ onBeforeMount(fetchPoints)
           </div>
           <div class="modal-body">
             <div class="form-floating mb-2">
-              <input type="text" class="form-control" v-model="pointToEdit.name" />
+              <input type="text" class="form-control" v-model="supplierToEdit.name" />
               <label>Название</label>
             </div>
             <div class="form-floating mb-2">
-              <input type="text" class="form-control" v-model="pointToEdit.address" />
-              <label>Адрес</label>
+              <input type="text" class="form-control" v-model="supplierToEdit.phone" />
+              <label>Телефон</label>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdatePoint">Сохранить</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdateSupplier">Сохранить</button>
           </div>
         </div>
       </div>
