@@ -10,8 +10,6 @@ async function onLoginClick() {
     await profileStore.login(username.value, password.value)
     if (profileStore.isAuthenticated) {
         window.location.href = '/'
-    } else {
-        alert('Неверный логин или пароль')
     }
 }
 </script>

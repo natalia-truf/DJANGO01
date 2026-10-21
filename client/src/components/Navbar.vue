@@ -19,7 +19,6 @@ async function onLogoutButtonClick() {
             </button>
             <div class="collapse navbar-collapse w-100 justify-content-between" id="navbarNav">
                 <ul class="navbar-nav">
-                    <li class="nav-item"><router-link class="nav-link" to="/">Главная</router-link></li>
                     <li class="nav-item"><router-link class="nav-link" to="/products">Товары</router-link></li>
                     <li class="nav-item"><router-link class="nav-link" to="/categories">Категории</router-link></li>
                     <li class="nav-item"><router-link class="nav-link" to="/suppliers">Поставщики</router-link></li>

@@ -4,8 +4,6 @@ from model_bakery import baker
 
 from shop.models import Category, Supplier, PointOfSale, Product, Order
 
-
-#CATEGORY
 class CategoryViewSetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -63,7 +61,6 @@ class CategoryViewSetTestCase(TestCase):
         assert data['name'] == category.name
 
 
-#SUPPLIER
 class SupplierViewSetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -124,7 +121,6 @@ class SupplierViewSetTestCase(TestCase):
         assert data['name'] == supplier.name
 
 
-#POINT OF SALE
 class PointOfSaleViewSetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -185,7 +181,6 @@ class PointOfSaleViewSetTestCase(TestCase):
         assert data['name'] == point.name
 
 
-# PRODUCT
 class ProductViewSetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -262,7 +257,6 @@ class ProductViewSetTestCase(TestCase):
         assert data['name'] == product.name
 
 
-#ORDER
 class OrderViewSetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()

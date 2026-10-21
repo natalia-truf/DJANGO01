@@ -95,8 +95,9 @@ async function onGalleryFileChange() {
   galleryPictureRef.value.value = ''
 }
 
-async function onRemoveGalleryImage(image) {
-  await axios.delete(`/api/productimages/${image.id}/`)
+async function onRemoveGalleryImage() {
+  if (albumImages.value.length === 0) return
+  await axios.delete(`/api/productimages/${albumImages.value[currentIndex.value].id}/`)
   await refreshAlbum()
 }
 

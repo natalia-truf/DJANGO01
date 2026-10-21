@@ -9,16 +9,12 @@ const useProfileStore = defineStore('profileStore', () => {
     const userName = ref(null);
     const userRole = ref(null);
     
-    async function fetchMe() {
-        try {
-            const r = await axios.get("/api/profile/me/");
-            axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
-            isAuthenticated.value = r.data.is_authenticated;
-            userName.value = r.data.is_authenticated ? r.data.username : null;
-            userRole.value = r.data.is_authenticated ? r.data.role : null;
-        } catch (e) {
-            console.error(e);
-        }
+        async function fetchMe() {
+        const r = await axios.get("/api/profile/me/");
+        axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+        isAuthenticated.value = r.data.is_authenticated;
+        userName.value = r.data.is_authenticated ? r.data.username : null;
+        userRole.value = r.data.is_authenticated ? r.data.role : null;
     }
 
     async function login(username, password) {
