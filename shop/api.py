@@ -35,7 +35,7 @@ class PointOfSaleViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateMod
 
 class ProductViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('-id')
     serializer_class = ProductSerializer
 
 
@@ -47,7 +47,7 @@ class ProductImageViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateMo
 
 class OrderViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin,
                    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
-    queryset = Order.objects.all()
+    queryset = Order.objects.all().order_by('-id')
     serializer_class = OrderSerializer
 
     def get_queryset(self):

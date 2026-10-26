@@ -122,6 +122,10 @@ onBeforeMount(() => {
           <input type="number" step="0.01" class="form-control" v-model="productToAdd.price" required />
           <label>Цена</label>
         </div></div>
+        <div class="col"><div class="form-floating">
+          <input type="text" class="form-control" v-model="productToAdd.description" />
+          <label>Описание (необязательно)</label>
+        </div></div>
         <div class="col-auto">
           <input class="form-control" type="file" ref="productsPictureRef" @change="productsAddPictureChange" />
         </div>
@@ -141,9 +145,12 @@ onBeforeMount(() => {
       </div>
     </form>
 
-    <div v-for="item in products" :key="item.id" class="border rounded p-3 mb-2">
+        <div v-for="item in products" :key="item.id" class="border rounded p-3 mb-2">
       <div class="row align-items-center">
-        <div class="col-3">{{ item.name }}</div>
+        <div class="col-3">
+            <div class="fw-bold">{{ item.name }}</div>
+            <div class="text-muted small">{{ item.description }}</div>
+        </div>
         <div class="col-2 text-end">{{ item.price }} руб.</div>
         <div class="col-2 text-end">{{ item.category?.name }}</div>
 
@@ -178,6 +185,10 @@ onBeforeMount(() => {
           </div>
           <div class="form-floating mb-2">
             <input type="number" step="0.01" class="form-control" v-model="productToEdit.price" /><label>Цена</label>
+          </div>
+          <div class="form-floating mb-2">
+            <input type="text" class="form-control" v-model="productToEdit.description" />
+            <label>Описание</label>
           </div>
           <div class="form-floating mb-2">
             <select class="form-select" v-model="productToEdit.category_id">
