@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onBeforeMount } from 'vue'
+import { onBeforeMount, ref, computed, watch } from 'vue'
 import axios from 'axios'
 
 const orders = ref([])
@@ -8,24 +8,49 @@ const points = ref([])
 const orderToAdd = ref({})
 const orderToEdit = ref({})
 
+const page = ref(1)
+const pageItemsCount = ref(10)
+const totalCount = ref(0)
+const loading = ref(false)
+
 async function fetchOrders() {
-  const r = await axios.get('/api/orders/')
-  orders.value = r.data
+  loading.value = true
+  const r = await axios.get('/api/orders/', { params: { page: page.value } })
+  orders.value = r.data.results || r.data
+  totalCount.value = r.data.count || 0
+  loading.value = false
 }
 
 async function fetchProducts() {
-  const r = await axios.get('/api/products/')
-  products.value = r.data
+  const r = await axios.get('/api/products/', { params: { page_size: 10000 } })
+  products.value = r.data.results || r.data
 }
 
 async function fetchPoints() {
-  const r = await axios.get('/api/points/')
-  points.value = r.data
+  const r = await axios.get('/api/points/', { params: { page_size: 10000 } })
+  points.value = r.data.results || r.data
+}
+
+const pagesCount = computed(() => {
+  return Math.trunc(totalCount.value / pageItemsCount.value) + 1
+})
+
+watch(page, () => {
+  fetchOrders()
+})
+
+function prevPage() {
+  if (page.value > 1) page.value -= 1
+}
+
+function nextPage() {
+  if (page.value < pagesCount.value) page.value += 1
 }
 
 async function onOrderAdd() {
   await axios.post('/api/orders/', { ...orderToAdd.value })
   await fetchOrders()
+  orderToAdd.value = {}
 }
 
 async function onRemoveClick(order) {
@@ -36,8 +61,8 @@ async function onRemoveClick(order) {
 function onOrderEditClick(order) {
   orderToEdit.value = {
     ...order,
-    product_id: order.product?.id ?? order.product,
-    point_id: order.point?.id ?? order.point,
+    product_id: order.product?.id || order.product,
+    point_id: order.point?.id || order.point,
   }
 }
 
@@ -54,7 +79,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div>
+  <div class="mt-4">
     <h3 class="mb-4">Заказы</h3>
 
     <form @submit.prevent.stop="onOrderAdd" class="mb-4">
@@ -87,26 +112,60 @@ onBeforeMount(() => {
       </div>
     </form>
 
-    <div v-for="item in orders" :key="item.id" class="border rounded p-3 mb-2">
-      <div class="row align-items-center">
-        <div class="col-2">Заказ #{{ item.id }}</div>
-        <div class="col-3">{{ item.product?.name }}</div>
-        <div class="col-2 text-end">{{ item.quantity }} шт.</div>
-        <div class="col-3">{{ item.point?.name }}</div>
+    <div v-if="loading" class="text-center my-3">Гружу данные...</div>
 
-        <div class="col-2 d-flex gap-3 justify-content-center">
-          <button class="btn btn-success"
-                  @click="onOrderEditClick(item)"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editOrderModal">
-            <i class="bi bi-pen-fill"></i>
-          </button>
-          <button class="btn btn-danger" @click="onRemoveClick(item)">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+    <table class="table align-middle" v-else>
+      <thead>
+        <tr>
+          <th>Заказ №</th>
+          <th>Товар</th>
+          <th>Точка продажи</th>
+          <th class="text-end">Кол-во</th>
+          <th class="text-center">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="order in orders" :key="order.id">
+          <td>{{ order.id }}</td>
+          <td>{{ order.product?.name || 'Удален' }}</td>
+          <td>{{ order.point?.name || 'Удалена' }}</td>
+          <td class="text-end">{{ order.quantity }}</td>
+          <td class="text-center">
+            <div class="d-flex gap-2 justify-content-center">
+              <button class="btn btn-success btn-sm" @click="onOrderEditClick(order)" data-bs-toggle="modal" data-bs-target="#editOrderModal">
+                <i class="bi bi-pen-fill"></i>
+              </button>
+              <button class="btn btn-danger btn-sm" @click="onRemoveClick(order)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <nav aria-label="Page navigation" v-if="!loading && totalCount > 10">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" @click="prevPage" :class="{ disabled: page === 1 }">
+          <a class="page-link" href="#">Previous</a>
+        </li>
+        <li @click="prevPage" class="page-item" v-if="page - 1 > 0">
+          <a class="page-link">{{ page - 1 }}</a>
+        </li>
+        <li class="page-item active" v-if="page > 0">
+          <span class="page-link">{{ page }}</span>
+        </li>
+        <li @click="page = page + 1" class="page-item" v-if="page + 1 < pagesCount">
+          <a class="page-link">{{ page + 1 }}</a>
+        </li>
+        <li @click="page = page + 2" class="page-item" v-if="page + 2 < pagesCount">
+          <a class="page-link">{{ page + 2 }}</a>
+        </li>
+        <li class="page-item" @click="nextPage" :class="{ disabled: page === pagesCount }">
+          <a class="page-link" href="#">Next</a>
+        </li>
+      </ul>
+    </nav>
 
     <div class="modal fade" id="editOrderModal" tabindex="-1">
       <div class="modal-dialog">
@@ -128,7 +187,7 @@ onBeforeMount(() => {
               </select>
               <label>Точка продажи</label>
             </div>
-            <div class="form-floating mb-2">
+            <div class="form-floating">
               <input type="number" class="form-control" v-model="orderToEdit.quantity" />
               <label>Количество</label>
             </div>
@@ -142,6 +201,3 @@ onBeforeMount(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-</style>
