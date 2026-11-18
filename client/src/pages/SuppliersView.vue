@@ -1,61 +1,36 @@
 <script setup>
-import { onBeforeMount, ref, computed, watch } from 'vue'
-import axios from 'axios'
+import useShopStore from '@/stores/shopStore';
+import { ref, computed, watch } from 'vue';
 
-const suppliers = ref([])
-const supplierToAdd = ref({})
-const supplierToEdit = ref({})
+const shopStore = useShopStore();
 
-const page = ref(1)
-const pageItemsCount = ref(10)
-const totalCount = ref(0)
-const loading = ref(false)
-
-async function fetchSuppliers() {
-  loading.value = true
-  const r = await axios.get('/api/suppliers/', { params: { page: page.value } })
-  suppliers.value = r.data.results || r.data
-  totalCount.value = r.data.count || 0
-  loading.value = false
-}
+const supplierToAdd = ref({});
+const supplierToEdit = ref({});
 
 const pagesCount = computed(() => {
-  return Math.trunc(totalCount.value / pageItemsCount.value) + 1
-})
+  return Math.trunc(shopStore.suppliersTotalCount / shopStore.pageItemsCount) + 1;
+});
 
-watch(page, () => {
-  fetchSuppliers()
-})
+watch(() => shopStore.suppliersPage, () => {
+  shopStore.fetchSuppliers();
+});
 
-function prevPage() {
-  if (page.value > 1) page.value -= 1
+function onSupplierAdd() {
+  shopStore.addSupplier({ ...supplierToAdd.value });
+  supplierToAdd.value = {};
 }
 
-function nextPage() {
-  if (page.value < pagesCount.value) page.value += 1
-}
-
-async function onSupplierAdd() {
-  await axios.post('/api/suppliers/', { ...supplierToAdd.value })
-  await fetchSuppliers()
-  supplierToAdd.value = {}
-}
-
-async function onRemoveClick(supplier) {
-  await axios.delete(`/api/suppliers/${supplier.id}/`)
-  await fetchSuppliers()
+function onRemoveClick(supplier) {
+  shopStore.removeSupplier(supplier.id);
 }
 
 function onSupplierEditClick(supplier) {
-  supplierToEdit.value = { ...supplier }
+  supplierToEdit.value = { ...supplier };
 }
 
-async function onUpdateSupplier() {
-  await axios.put(`/api/suppliers/${supplierToEdit.value.id}/`, { ...supplierToEdit.value })
-  await fetchSuppliers()
+function onUpdateSupplier() {
+  shopStore.updateSupplier(supplierToEdit.value.id, { ...supplierToEdit.value });
 }
-
-onBeforeMount(fetchSuppliers)
 </script>
 
 <template>
@@ -76,9 +51,7 @@ onBeforeMount(fetchSuppliers)
       </div>
     </form>
 
-    <div v-if="loading" class="text-center my-3">Гружу данные...</div>
-
-    <table class="table align-middle" v-else>
+    <table class="table align-middle">
       <thead>
         <tr>
           <th>Название</th>
@@ -87,7 +60,7 @@ onBeforeMount(fetchSuppliers)
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in suppliers" :key="item.id">
+        <tr v-for="item in shopStore.suppliers" :key="item.id">
           <td>{{ item.name }}</td>
           <td>{{ item.phone }}</td>
           <td class="text-center">
@@ -104,24 +77,24 @@ onBeforeMount(fetchSuppliers)
       </tbody>
     </table>
 
-    <nav aria-label="Page navigation" v-if="!loading && totalCount > 10">
+    <nav aria-label="Page navigation" v-if="shopStore.suppliersTotalCount > 10">
       <ul class="pagination justify-content-center">
-        <li class="page-item" @click="prevPage" :class="{ disabled: page === 1 }">
+        <li class="page-item" @click="shopStore.suppliersPage -= 1" :class="{ disabled: shopStore.suppliersPage === 1 }">
           <a class="page-link" href="#">Previous</a>
         </li>
-        <li @click="prevPage" class="page-item" v-if="page - 1 > 0">
-          <a class="page-link">{{ page - 1 }}</a>
+        <li @click="shopStore.suppliersPage = shopStore.suppliersPage - 1" class="page-item" v-if="shopStore.suppliersPage - 1 > 0">
+          <a class="page-link">{{ shopStore.suppliersPage - 1 }}</a>
         </li>
-        <li class="page-item active" v-if="page > 0">
-          <span class="page-link">{{ page }}</span>
+        <li class="page-item active" v-if="shopStore.suppliersPage > 0">
+          <span class="page-link">{{ shopStore.suppliersPage }}</span>
         </li>
-        <li @click="page = page + 1" class="page-item" v-if="page + 1 < pagesCount">
-          <a class="page-link">{{ page + 1 }}</a>
+        <li @click="shopStore.suppliersPage = shopStore.suppliersPage + 1" class="page-item" v-if="shopStore.suppliersPage + 1 < pagesCount">
+          <a class="page-link">{{ shopStore.suppliersPage + 1 }}</a>
         </li>
-        <li @click="page = page + 2" class="page-item" v-if="page + 2 < pagesCount">
-          <a class="page-link">{{ page + 2 }}</a>
+        <li @click="shopStore.suppliersPage = shopStore.suppliersPage + 2" class="page-item" v-if="shopStore.suppliersPage + 2 < pagesCount">
+          <a class="page-link">{{ shopStore.suppliersPage + 2 }}</a>
         </li>
-        <li class="page-item" @click="nextPage" :class="{ disabled: page === pagesCount }">
+        <li class="page-item" @click="shopStore.suppliersPage += 1" :class="{ disabled: shopStore.suppliersPage === pagesCount }">
           <a class="page-link" href="#">Next</a>
         </li>
       </ul>

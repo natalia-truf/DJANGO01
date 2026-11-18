@@ -9,7 +9,7 @@ const useProfileStore = defineStore('profileStore', () => {
     const userName = ref(null);
     const userRole = ref(null);
     
-        async function fetchMe() {
+    async function fetchMe() {
         const r = await axios.get("/api/profile/me/");
         axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
         isAuthenticated.value = r.data.is_authenticated;

@@ -24,7 +24,7 @@ class CategoryViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateModelM
                       mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = None  # <-- Отключаем пагинацию для категорий
+    pagination_class = None
 
 
 class SupplierViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin,

@@ -1,61 +1,36 @@
 <script setup>
-import { onBeforeMount, ref, computed, watch } from 'vue'
-import axios from 'axios'
+import useShopStore from '@/stores/shopStore';
+import { ref, computed, watch } from 'vue';
 
-const points = ref([])
-const pointToAdd = ref({})
-const pointToEdit = ref({})
+const shopStore = useShopStore();
 
-const page = ref(1)
-const pageItemsCount = ref(10)
-const totalCount = ref(0)
-const loading = ref(false)
-
-async function fetchPoints() {
-  loading.value = true
-  const r = await axios.get('/api/points/', { params: { page: page.value } })
-  points.value = r.data.results || r.data
-  totalCount.value = r.data.count || 0
-  loading.value = false
-}
+const pointToAdd = ref({});
+const pointToEdit = ref({});
 
 const pagesCount = computed(() => {
-  return Math.trunc(totalCount.value / pageItemsCount.value) + 1
-})
+  return Math.trunc(shopStore.pointsTotalCount / shopStore.pageItemsCount) + 1;
+});
 
-watch(page, () => {
-  fetchPoints()
-})
+watch(() => shopStore.pointsPage, () => {
+  shopStore.fetchPoints();
+});
 
-function prevPage() {
-  if (page.value > 1) page.value -= 1
+function onPointAdd() {
+  shopStore.addPoint({ ...pointToAdd.value });
+  pointToAdd.value = {};
 }
 
-function nextPage() {
-  if (page.value < pagesCount.value) page.value += 1
-}
-
-async function onPointAdd() {
-  await axios.post('/api/points/', { ...pointToAdd.value })
-  await fetchPoints()
-  pointToAdd.value = {}
-}
-
-async function onRemoveClick(point) {
-  await axios.delete(`/api/points/${point.id}/`)
-  await fetchPoints()
+function onRemoveClick(point) {
+  shopStore.removePoint(point.id);
 }
 
 function onPointEditClick(point) {
-  pointToEdit.value = { ...point }
+  pointToEdit.value = { ...point };
 }
 
-async function onUpdatePoint() {
-  await axios.put(`/api/points/${pointToEdit.value.id}/`, { ...pointToEdit.value })
-  await fetchPoints()
+function onUpdatePoint() {
+  shopStore.updatePoint(pointToEdit.value.id, { ...pointToEdit.value });
 }
-
-onBeforeMount(fetchPoints)
 </script>
 
 <template>
@@ -76,9 +51,7 @@ onBeforeMount(fetchPoints)
       </div>
     </form>
 
-    <div v-if="loading" class="text-center my-3">Гружу данные...</div>
-
-    <table class="table align-middle" v-else>
+    <table class="table align-middle">
       <thead>
         <tr>
           <th>Название</th>
@@ -87,7 +60,7 @@ onBeforeMount(fetchPoints)
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in points" :key="item.id">
+        <tr v-for="item in shopStore.points" :key="item.id">
           <td>{{ item.name }}</td>
           <td>{{ item.address }}</td>
           <td class="text-center">
@@ -104,24 +77,24 @@ onBeforeMount(fetchPoints)
       </tbody>
     </table>
 
-    <nav aria-label="Page navigation" v-if="!loading && totalCount > 10">
+    <nav aria-label="Page navigation" v-if="shopStore.pointsTotalCount > 10">
       <ul class="pagination justify-content-center">
-        <li class="page-item" @click="prevPage" :class="{ disabled: page === 1 }">
+        <li class="page-item" @click="shopStore.pointsPage -= 1" :class="{ disabled: shopStore.pointsPage === 1 }">
           <a class="page-link" href="#">Previous</a>
         </li>
-        <li @click="prevPage" class="page-item" v-if="page - 1 > 0">
-          <a class="page-link">{{ page - 1 }}</a>
+        <li @click="shopStore.pointsPage = shopStore.pointsPage - 1" class="page-item" v-if="shopStore.pointsPage - 1 > 0">
+          <a class="page-link">{{ shopStore.pointsPage - 1 }}</a>
         </li>
-        <li class="page-item active" v-if="page > 0">
-          <span class="page-link">{{ page }}</span>
+        <li class="page-item active" v-if="shopStore.pointsPage > 0">
+          <span class="page-link">{{ shopStore.pointsPage }}</span>
         </li>
-        <li @click="page = page + 1" class="page-item" v-if="page + 1 < pagesCount">
-          <a class="page-link">{{ page + 1 }}</a>
+        <li @click="shopStore.pointsPage = shopStore.pointsPage + 1" class="page-item" v-if="shopStore.pointsPage + 1 < pagesCount">
+          <a class="page-link">{{ shopStore.pointsPage + 1 }}</a>
         </li>
-        <li @click="page = page + 2" class="page-item" v-if="page + 2 < pagesCount">
-          <a class="page-link">{{ page + 2 }}</a>
+        <li @click="shopStore.pointsPage = shopStore.pointsPage + 2" class="page-item" v-if="shopStore.pointsPage + 2 < pagesCount">
+          <a class="page-link">{{ shopStore.pointsPage + 2 }}</a>
         </li>
-        <li class="page-item" @click="nextPage" :class="{ disabled: page === pagesCount }">
+        <li class="page-item" @click="shopStore.pointsPage += 1" :class="{ disabled: shopStore.pointsPage === pagesCount }">
           <a class="page-link" href="#">Next</a>
         </li>
       </ul>

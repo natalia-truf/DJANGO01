@@ -1,61 +1,27 @@
 <script setup>
-import { onBeforeMount, ref, computed, watch } from 'vue'
-import axios from 'axios'
+import useShopStore from '@/stores/shopStore';
+import { ref, computed, watch } from 'vue';
 
-const orders = ref([])
-const products = ref([])
-const points = ref([])
-const orderToAdd = ref({})
-const orderToEdit = ref({})
+const shopStore = useShopStore();
 
-const page = ref(1)
-const pageItemsCount = ref(10)
-const totalCount = ref(0)
-const loading = ref(false)
-
-async function fetchOrders() {
-  loading.value = true
-  const r = await axios.get('/api/orders/', { params: { page: page.value } })
-  orders.value = r.data.results || r.data
-  totalCount.value = r.data.count || 0
-  loading.value = false
-}
-
-async function fetchProducts() {
-  const r = await axios.get('/api/products/', { params: { page_size: 10000 } })
-  products.value = r.data.results || r.data
-}
-
-async function fetchPoints() {
-  const r = await axios.get('/api/points/', { params: { page_size: 10000 } })
-  points.value = r.data.results || r.data
-}
+const orderToAdd = ref({});
+const orderToEdit = ref({});
 
 const pagesCount = computed(() => {
-  return Math.trunc(totalCount.value / pageItemsCount.value) + 1
-})
+  return Math.trunc(shopStore.ordersTotalCount / shopStore.pageItemsCount) + 1;
+});
 
-watch(page, () => {
-  fetchOrders()
-})
+watch(() => shopStore.ordersPage, () => {
+  shopStore.fetchOrders();
+});
 
-function prevPage() {
-  if (page.value > 1) page.value -= 1
+function onOrderAdd() {
+  shopStore.addOrder({ ...orderToAdd.value });
+  orderToAdd.value = {};
 }
 
-function nextPage() {
-  if (page.value < pagesCount.value) page.value += 1
-}
-
-async function onOrderAdd() {
-  await axios.post('/api/orders/', { ...orderToAdd.value })
-  await fetchOrders()
-  orderToAdd.value = {}
-}
-
-async function onRemoveClick(order) {
-  await axios.delete(`/api/orders/${order.id}/`)
-  await fetchOrders()
+function onRemoveClick(order) {
+  shopStore.removeOrder(order.id);
 }
 
 function onOrderEditClick(order) {
@@ -63,19 +29,12 @@ function onOrderEditClick(order) {
     ...order,
     product_id: order.product?.id || order.product,
     point_id: order.point?.id || order.point,
-  }
+  };
 }
 
-async function onUpdateOrder() {
-  await axios.put(`/api/orders/${orderToEdit.value.id}/`, { ...orderToEdit.value })
-  await fetchOrders()
+function onUpdateOrder() {
+  shopStore.updateOrder(orderToEdit.value.id, { ...orderToEdit.value });
 }
-
-onBeforeMount(() => {
-  fetchOrders()
-  fetchProducts()
-  fetchPoints()
-})
 </script>
 
 <template>
@@ -87,7 +46,7 @@ onBeforeMount(() => {
         <div class="col">
           <div class="form-floating">
             <select class="form-select" v-model="orderToAdd.product_id" required>
-              <option :value="p.id" v-for="p in products" :key="p.id">{{ p.name }}</option>
+              <option :value="p.id" v-for="p in shopStore.products" :key="p.id">{{ p.name }}</option>
             </select>
             <label>Товар</label>
           </div>
@@ -95,7 +54,7 @@ onBeforeMount(() => {
         <div class="col">
           <div class="form-floating">
             <select class="form-select" v-model="orderToAdd.point_id" required>
-              <option :value="pt.id" v-for="pt in points" :key="pt.id">{{ pt.name }}</option>
+              <option :value="pt.id" v-for="pt in shopStore.points" :key="pt.id">{{ pt.name }}</option>
             </select>
             <label>Точка продажи</label>
           </div>
@@ -112,9 +71,7 @@ onBeforeMount(() => {
       </div>
     </form>
 
-    <div v-if="loading" class="text-center my-3">Гружу данные...</div>
-
-    <table class="table align-middle" v-else>
+    <table class="table align-middle">
       <thead>
         <tr>
           <th>Заказ №</th>
@@ -125,7 +82,7 @@ onBeforeMount(() => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="order in orders" :key="order.id">
+        <tr v-for="order in shopStore.orders" :key="order.id">
           <td>{{ order.id }}</td>
           <td>{{ order.product?.name || 'Удален' }}</td>
           <td>{{ order.point?.name || 'Удалена' }}</td>
@@ -144,24 +101,24 @@ onBeforeMount(() => {
       </tbody>
     </table>
 
-    <nav aria-label="Page navigation" v-if="!loading && totalCount > 10">
+    <nav aria-label="Page navigation" v-if="shopStore.ordersTotalCount > 10">
       <ul class="pagination justify-content-center">
-        <li class="page-item" @click="prevPage" :class="{ disabled: page === 1 }">
+        <li class="page-item" @click="shopStore.ordersPage -= 1" :class="{ disabled: shopStore.ordersPage === 1 }">
           <a class="page-link" href="#">Previous</a>
         </li>
-        <li @click="prevPage" class="page-item" v-if="page - 1 > 0">
-          <a class="page-link">{{ page - 1 }}</a>
+        <li @click="shopStore.ordersPage = shopStore.ordersPage - 1" class="page-item" v-if="shopStore.ordersPage - 1 > 0">
+          <a class="page-link">{{ shopStore.ordersPage - 1 }}</a>
         </li>
-        <li class="page-item active" v-if="page > 0">
-          <span class="page-link">{{ page }}</span>
+        <li class="page-item active" v-if="shopStore.ordersPage > 0">
+          <span class="page-link">{{ shopStore.ordersPage }}</span>
         </li>
-        <li @click="page = page + 1" class="page-item" v-if="page + 1 < pagesCount">
-          <a class="page-link">{{ page + 1 }}</a>
+        <li @click="shopStore.ordersPage = shopStore.ordersPage + 1" class="page-item" v-if="shopStore.ordersPage + 1 < pagesCount">
+          <a class="page-link">{{ shopStore.ordersPage + 1 }}</a>
         </li>
-        <li @click="page = page + 2" class="page-item" v-if="page + 2 < pagesCount">
-          <a class="page-link">{{ page + 2 }}</a>
+        <li @click="shopStore.ordersPage = shopStore.ordersPage + 2" class="page-item" v-if="shopStore.ordersPage + 2 < pagesCount">
+          <a class="page-link">{{ shopStore.ordersPage + 2 }}</a>
         </li>
-        <li class="page-item" @click="nextPage" :class="{ disabled: page === pagesCount }">
+        <li class="page-item" @click="shopStore.ordersPage += 1" :class="{ disabled: shopStore.ordersPage === pagesCount }">
           <a class="page-link" href="#">Next</a>
         </li>
       </ul>
@@ -177,13 +134,13 @@ onBeforeMount(() => {
           <div class="modal-body">
             <div class="form-floating mb-2">
               <select class="form-select" v-model="orderToEdit.product_id">
-                <option :value="p.id" v-for="p in products" :key="p.id">{{ p.name }}</option>
+                <option :value="p.id" v-for="p in shopStore.products" :key="p.id">{{ p.name }}</option>
               </select>
               <label>Товар</label>
             </div>
             <div class="form-floating mb-2">
               <select class="form-select" v-model="orderToEdit.point_id">
-                <option :value="pt.id" v-for="pt in points" :key="pt.id">{{ pt.name }}</option>
+                <option :value="pt.id" v-for="pt in shopStore.points" :key="pt.id">{{ pt.name }}</option>
               </select>
               <label>Точка продажи</label>
             </div>

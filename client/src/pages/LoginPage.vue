@@ -9,7 +9,7 @@ const password = ref("")
 async function onLoginClick() {
     await profileStore.login(username.value, password.value)
     if (profileStore.isAuthenticated) {
-        window.location.href = '/'
+        window.location.href = '/products'
     }
 }
 </script>
