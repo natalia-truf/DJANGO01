@@ -9,6 +9,12 @@ const useShopStore = defineStore("ShopStore", () => {
     const points = ref([]);
     const orders = ref([]);
 
+    const productsStats = ref({});
+    const suppliersStats = ref({});
+    const categoriesStats = ref({});
+    const pointsStats = ref({});
+    const ordersStats = ref({});
+
     const productsPage = ref(1);
     const productsTotalCount = ref(0);
 
@@ -28,34 +34,48 @@ const useShopStore = defineStore("ShopStore", () => {
         products.value = r.data.results || r.data;
         productsTotalCount.value = r.data.count || 0;
     }
+    async function fetchProductsStats() {
+        const r = await axios.get("/api/products/stats/");
+        productsStats.value = r.data;
+    }
     async function addProduct(formData) {
         await axios.post("/api/products/", formData);
         fetchProducts();
+        fetchProductsStats();
     }
     async function removeProduct(id) {
         await axios.delete(`/api/products/${id}/`);
         fetchProducts();
+        fetchProductsStats();
     }
     async function updateProduct(id, formData) {
         await axios.put(`/api/products/${id}/`, formData);
         fetchProducts();
+        fetchProductsStats();
     }
 
     async function fetchCategories() {
         const r = await axios.get("/api/categories/");
         categories.value = r.data.results || r.data;
     }
+    async function fetchCategoriesStats() {
+        const r = await axios.get("/api/categories/stats/");
+        categoriesStats.value = r.data;
+    }
     async function addCategory(formData) {
         await axios.post("/api/categories/", formData);
         fetchCategories();
+        fetchCategoriesStats();
     }
     async function removeCategory(id) {
         await axios.delete(`/api/categories/${id}/`);
         fetchCategories();
+        fetchCategoriesStats();
     }
     async function updateCategory(id, formData) {
         await axios.put(`/api/categories/${id}/`, formData);
         fetchCategories();
+        fetchCategoriesStats();
     }
 
     async function fetchSuppliers() {
@@ -63,17 +83,24 @@ const useShopStore = defineStore("ShopStore", () => {
         suppliers.value = r.data.results || r.data;
         suppliersTotalCount.value = r.data.count || 0;
     }
+    async function fetchSuppliersStats() {
+        const r = await axios.get("/api/suppliers/stats/");
+        suppliersStats.value = r.data;
+    }
     async function addSupplier(data) {
         await axios.post("/api/suppliers/", data);
         fetchSuppliers();
+        fetchSuppliersStats();
     }
     async function removeSupplier(id) {
         await axios.delete(`/api/suppliers/${id}/`);
         fetchSuppliers();
+        fetchSuppliersStats();
     }
     async function updateSupplier(id, data) {
         await axios.put(`/api/suppliers/${id}/`, data);
         fetchSuppliers();
+        fetchSuppliersStats();
     }
 
     async function fetchPoints() {
@@ -81,17 +108,24 @@ const useShopStore = defineStore("ShopStore", () => {
         points.value = r.data.results || r.data;
         pointsTotalCount.value = r.data.count || 0;
     }
+    async function fetchPointsStats() {
+        const r = await axios.get("/api/points/stats/");
+        pointsStats.value = r.data;
+    }
     async function addPoint(data) {
         await axios.post("/api/points/", data);
         fetchPoints();
+        fetchPointsStats();
     }
     async function removePoint(id) {
         await axios.delete(`/api/points/${id}/`);
         fetchPoints();
+        fetchPointsStats();
     }
     async function updatePoint(id, data) {
         await axios.put(`/api/points/${id}/`, data);
         fetchPoints();
+        fetchPointsStats();
     }
 
     async function fetchOrders() {
@@ -99,17 +133,24 @@ const useShopStore = defineStore("ShopStore", () => {
         orders.value = r.data.results || r.data;
         ordersTotalCount.value = r.data.count || 0;
     }
+    async function fetchOrdersStats() {
+        const r = await axios.get("/api/orders/stats/");
+        ordersStats.value = r.data;
+    }
     async function addOrder(data) {
         await axios.post("/api/orders/", data);
         fetchOrders();
+        fetchOrdersStats();
     }
     async function removeOrder(id) {
         await axios.delete(`/api/orders/${id}/`);
         fetchOrders();
+        fetchOrdersStats();
     }
     async function updateOrder(id, data) {
         await axios.put(`/api/orders/${id}/`, data);
         fetchOrders();
+        fetchOrdersStats();
     }
 
     async function addGalleryImage(formData, product) {
@@ -123,20 +164,33 @@ const useShopStore = defineStore("ShopStore", () => {
 
     onBeforeMount(() => {
         fetchProducts();
+        fetchProductsStats();
         fetchCategories();
+        fetchCategoriesStats();
         fetchSuppliers();
+        fetchSuppliersStats();
         fetchPoints();
+        fetchPointsStats();
         fetchOrders();
+        fetchOrdersStats();
     });
 
     return {
         products, categories, suppliers, points, orders,
+        productsStats, suppliersStats, pointsStats, ordersStats, categoriesStats,
+        
         productsPage, productsTotalCount,
         suppliersPage, suppliersTotalCount,
         pointsPage, pointsTotalCount,
         ordersPage, ordersTotalCount,
         pageItemsCount,
-        fetchProducts, fetchCategories, fetchSuppliers, fetchPoints, fetchOrders,
+
+        fetchProducts, fetchProductsStats, 
+        fetchCategories, fetchCategoriesStats,
+        fetchSuppliers, fetchSuppliersStats, 
+        fetchPoints, fetchPointsStats, 
+        fetchOrders, fetchOrdersStats,
+        
         addProduct, removeProduct, updateProduct,
         addCategory, removeCategory, updateCategory,
         addSupplier, removeSupplier, updateSupplier,

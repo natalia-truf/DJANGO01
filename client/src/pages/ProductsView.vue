@@ -1,8 +1,10 @@
 <script setup>
 import useShopStore from '@/stores/shopStore';
+import useProfileStore from '@/stores/profileStore';
 import { ref, computed, watch } from 'vue';
 
 const shopStore = useShopStore();
+const profileStore = useProfileStore();
 
 const productToAdd = ref({});
 const productToEdit = ref({});
@@ -78,6 +80,42 @@ function onRemoveGalleryImage(image) {
 <template>
   <div class="mt-4">
     <h3 class="mb-4">Товары</h3>
+
+        <!-- Блок статистики виден админу и продавцу -->
+    <div class="row mb-3" v-if="profileStore.isSuperuser || profileStore.userRole === 'seller'">
+      <div class="col-md-3">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Всего товаров</h5>
+            <p class="card-text fs-4">{{ shopStore.productsStats.count }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Средняя цена</h5>
+            <p class="card-text fs-4">{{ shopStore.productsStats.avg_price?.toFixed(2) }} руб.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Макс. цена</h5>
+            <p class="card-text fs-4">{{ shopStore.productsStats.max_price }} руб.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Мин. цена</h5>
+            <p class="card-text fs-4">{{ shopStore.productsStats.min_price }} руб.</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <form @submit.prevent.stop="onProductAdd" class="mb-4">
       <div class="row g-2">

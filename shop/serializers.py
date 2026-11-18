@@ -61,6 +61,7 @@ class OrderSerializer(serializers.ModelSerializer):
         queryset=PointOfSale.objects.all(), source='point', write_only=True
     )
     username = serializers.CharField(source='user.username', read_only=True)
+    total_price = serializers.ReadOnlyField()
 
     def create(self, validated_data):
         if 'request' in self.context:
@@ -70,5 +71,5 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'product', 'product_id', 'point', 'point_id',
-                  'quantity', 'created_at', 'user', 'username']
+                  'quantity', 'total_price', 'created_at', 'user', 'username']
         read_only_fields = ['user']

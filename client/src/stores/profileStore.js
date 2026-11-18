@@ -4,10 +4,10 @@ import axios from 'axios';
 import Cookies from "js-cookie";
 
 const useProfileStore = defineStore('profileStore', () => {
-
     const isAuthenticated = ref(false);
     const userName = ref(null);
     const userRole = ref(null);
+    const isSuperuser = ref(false);
     
     async function fetchMe() {
         const r = await axios.get("/api/profile/me/");
@@ -15,13 +15,11 @@ const useProfileStore = defineStore('profileStore', () => {
         isAuthenticated.value = r.data.is_authenticated;
         userName.value = r.data.is_authenticated ? r.data.username : null;
         userRole.value = r.data.is_authenticated ? r.data.role : null;
+        isSuperuser.value = r.data.is_authenticated ? r.data.is_superuser : false;
     }
 
     async function login(username, password) {
-        await axios.post('/api/profile/login/', {
-            username: username,
-            password: password,
-        })
+        await axios.post('/api/profile/login/', { username, password })
         await fetchMe();
     }
 
@@ -35,13 +33,9 @@ const useProfileStore = defineStore('profileStore', () => {
     })
 
     return {
-        isAuthenticated,
-        userName,
-        userRole,
-        fetchMe,
-        login,
-        logout,
-    }
+    isAuthenticated, userName, userRole, isSuperuser,
+    fetchMe, login, logout,
+}
 })
 
 export default useProfileStore;

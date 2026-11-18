@@ -1,8 +1,10 @@
 <script setup>
 import useShopStore from '@/stores/shopStore';
+import useProfileStore from '@/stores/profileStore';
 import { ref } from 'vue';
 
 const shopStore = useShopStore();
+const profileStore = useProfileStore();
 
 const categoryToAdd = ref({});
 const categoryToEdit = ref({});
@@ -41,6 +43,17 @@ function onUpdateCategory() {
 <template>
   <div>
     <h3 class="mb-4">Категории</h3>
+
+    <div class="row mb-3" v-if="profileStore.isSuperuser || profileStore.userRole === 'seller'">
+      <div class="col-md-12">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Всего категорий</h5>
+            <p class="card-text fs-4">{{ shopStore.categoriesStats.count }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <form @submit.prevent.stop="onCategoryAdd" class="mb-4">
       <div class="row g-2">

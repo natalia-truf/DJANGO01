@@ -1,8 +1,10 @@
 <script setup>
 import useShopStore from '@/stores/shopStore';
+import useProfileStore from '@/stores/profileStore';
 import { ref, computed, watch } from 'vue';
 
 const shopStore = useShopStore();
+const profileStore = useProfileStore();
 
 const supplierToAdd = ref({});
 const supplierToEdit = ref({});
@@ -36,6 +38,17 @@ function onUpdateSupplier() {
 <template>
   <div class="mt-4">
     <h3 class="mb-4">Поставщики</h3>
+
+    <div class="row mb-3" v-if="profileStore.isSuperuser || profileStore.userRole === 'seller'">
+      <div class="col-md-12">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Всего поставщиков</h5>
+            <p class="card-text fs-4">{{ shopStore.suppliersStats.count }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <form @submit.prevent.stop="onSupplierAdd" class="mb-4">
       <div class="row g-2">

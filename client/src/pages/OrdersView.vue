@@ -1,8 +1,10 @@
 <script setup>
 import useShopStore from '@/stores/shopStore';
+import useProfileStore from '@/stores/profileStore';
 import { ref, computed, watch } from 'vue';
 
 const shopStore = useShopStore();
+const profileStore = useProfileStore();
 
 const orderToAdd = ref({});
 const orderToEdit = ref({});
@@ -41,6 +43,33 @@ function onUpdateOrder() {
   <div class="mt-4">
     <h3 class="mb-4">Заказы</h3>
 
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Всего заказов</h5>
+            <p class="card-text fs-4">{{ shopStore.ordersStats.count }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Продано единиц товара</h5>
+            <p class="card-text fs-4">{{ shopStore.ordersStats.total_items }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-center bg-light">
+          <div class="card-body">
+            <h5 class="card-title">Общая сумма</h5>
+            <p class="card-text fs-4">{{ shopStore.ordersStats.total_sum }} руб.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <form @submit.prevent.stop="onOrderAdd" class="mb-4">
       <div class="row g-2">
         <div class="col">
@@ -78,6 +107,7 @@ function onUpdateOrder() {
           <th>Товар</th>
           <th>Точка продажи</th>
           <th class="text-end">Кол-во</th>
+          <th class="text-end">Сумма</th>
           <th class="text-center">Действия</th>
         </tr>
       </thead>
@@ -87,6 +117,7 @@ function onUpdateOrder() {
           <td>{{ order.product?.name || 'Удален' }}</td>
           <td>{{ order.point?.name || 'Удалена' }}</td>
           <td class="text-end">{{ order.quantity }}</td>
+          <td class="text-end">{{ order.total_price }} руб.</td> <!-- ВЫВОДИМ СУММУ -->
           <td class="text-center">
             <div class="d-flex gap-2 justify-content-center">
               <button class="btn btn-success btn-sm" @click="onOrderEditClick(order)" data-bs-toggle="modal" data-bs-target="#editOrderModal">
