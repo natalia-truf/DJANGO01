@@ -1,6 +1,7 @@
 <script setup>
 import useShopStore from '@/stores/shopStore';
 import { ref, computed, watch } from 'vue';
+import axios from 'axios';
 
 const shopStore = useShopStore();
 
@@ -21,8 +22,8 @@ const filterProductSearch = ref('');
 const filterProductOpen = ref(false);
 const filteredFilterProducts = computed(() => {
   const q = filterProductSearch.value.toLowerCase();
-  if (!q) return shopStore.products;
-  return shopStore.products.filter(p => p.name.toLowerCase().includes(q));
+  if (!q) return shopStore.allProducts;
+  return shopStore.allProducts.filter(p => p.name.toLowerCase().includes(q));
 });
 
 function selectFilterProduct(p) {
@@ -107,6 +108,26 @@ function resetAllFilters() {
   
   shopStore.ordersPage = 1;
   shopStore.fetchOrders();
+}
+
+async function exportToExcel() {
+  try {
+    const response = await axios.get('/api/orders/export-excel/', {
+      responseType: 'blob'
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Заказы_${new Date().toISOString().slice(0,10)}.xlsx`);
+    
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("Ошибка при экспорте:", error);
+    alert("Не удалось скачать файл.");
+  }
 }
 
 const pagesCount = computed(() => {
@@ -200,6 +221,12 @@ function onUpdateOrder() {
       </div>
     </form>
 
+    <div class="mb-3">
+      <button type="button" class="btn btn-success" @click="exportToExcel">
+        <i class="bi bi-file-earmark-excel"></i> Скачать Excel
+      </button>
+    </div>
+
     <div class="row mb-3 g-2 align-items-end">
       <div class="col-md-3 position-relative">
         <div class="input-group">
@@ -207,7 +234,7 @@ function onUpdateOrder() {
           <button class="btn btn-outline-secondary" type="button" @click="clearFilterProduct"><i class="bi bi-x-lg"></i></button>
         </div>
         <div v-if="filterProductOpen && filteredFilterProducts.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
-          <div v-for="p in filteredFilterProducts" :key="p.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterProduct(p)" :class="{ 'bg-primary text-white': shopStore.ordersFilter.product === p.id }">
+          <div v-for="p in filteredFilterProducts" :key="p.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterProduct(p)" :class="{ 'bg-primary text-white': shopStore.ordersFilter.product === p.name }">
             {{ p.name }}
           </div>
         </div>
@@ -219,7 +246,7 @@ function onUpdateOrder() {
           <button class="btn btn-outline-secondary" type="button" @click="clearFilterPoint"><i class="bi bi-x-lg"></i></button>
         </div>
         <div v-if="filterPointOpen && filteredFilterPoints.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
-          <div v-for="pt in filteredFilterPoints" :key="pt.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterPoint(pt)" :class="{ 'bg-primary text-white': shopStore.ordersFilter.point === pt.id }">
+          <div v-for="pt in filteredFilterPoints" :key="pt.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterPoint(pt)" :class="{ 'bg-primary text-white': shopStore.ordersFilter.point === pt.name }">
             {{ pt.name }}
           </div>
         </div>

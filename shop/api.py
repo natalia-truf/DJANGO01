@@ -5,6 +5,9 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import F
+from openpyxl import Workbook
+from django.http import HttpResponse
+from openpyxl.styles import Font
 
 from django.contrib.auth.models import User
 from django.contrib.auth import logout as django_logout
@@ -233,6 +236,43 @@ class OrderViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixi
         serializer = OrderStatsSerializer(instance=stats)
         return Response(serializer.data)
 
+    @action(detail=False, methods=["GET"], url_path="export-excel")
+    def export_excel(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Заказы"
+        
+        headers = ["ID заказа", "Товар", "Точка продажи", "Количество", "Сумма (руб.)", "Дата"]
+        ws.append(headers)
+        
+        for cell in ws[1]:
+            cell.font = Font(bold=True)
+        
+        for order in qs:
+            ws.append([
+                order.id,
+                order.product.name if order.product else "Удален",
+                order.point.name if order.point else "Удалена",
+                order.quantity,
+                float(order.total_price),
+                order.created_at.strftime("%d.%m.%Y %H:%M")
+            ])
+        
+        ws.column_dimensions['A'].width = 10
+        ws.column_dimensions['B'].width = 30
+        ws.column_dimensions['C'].width = 25
+        ws.column_dimensions['D'].width = 12
+        ws.column_dimensions['E'].width = 15
+        ws.column_dimensions['F'].width = 20
+        
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=orders_export.xlsx'
+        wb.save(response)
+        return response
 
 class ProfileViewSet(GenericViewSet):
     queryset = User.objects.all()
