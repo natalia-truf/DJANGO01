@@ -17,6 +17,76 @@ watch(() => shopStore.pointsPage, () => {
   shopStore.fetchPoints();
 });
 
+const uniquePointsByName = computed(() => {
+  const seen = new Set();
+  return shopStore.allPoints.filter(p => {
+    const name = String(p.name).toLowerCase().trim();
+    if (seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+});
+
+const uniquePointsByAddress = computed(() => {
+  const seen = new Set();
+  return shopStore.allPoints.filter(p => {
+    const address = String(p.address).toLowerCase().trim();
+    if (seen.has(address)) return false;
+    seen.add(address);
+    return true;
+  });
+});
+
+const nameFilterSearch = ref('');
+const nameFilterOpen = ref(false);
+
+const filteredPointsByName = computed(() => {
+  const q = nameFilterSearch.value.toLowerCase();
+  if (!q) return uniquePointsByName.value;
+  return uniquePointsByName.value.filter(p => p.name.toLowerCase().includes(q));
+});
+
+function selectFilterName(p) {
+  shopStore.pointsFilter.name = p.name;
+  nameFilterSearch.value = p.name;
+  nameFilterOpen.value = false;
+  shopStore.pointsPage = 1;
+  shopStore.fetchPoints();
+}
+
+function clearFilterName() {
+  shopStore.pointsFilter.name = '';
+  nameFilterSearch.value = '';
+  nameFilterOpen.value = false;
+  shopStore.pointsPage = 1;
+  shopStore.fetchPoints();
+}
+
+const addressFilterSearch = ref('');
+const addressFilterOpen = ref(false);
+
+const filteredPointsByAddress = computed(() => {
+  const q = addressFilterSearch.value.toLowerCase();
+  if (!q) return uniquePointsByAddress.value;
+  return uniquePointsByAddress.value.filter(p => p.address.toLowerCase().includes(q));
+});
+
+function selectFilterAddress(p) {
+  shopStore.pointsFilter.address = p.address;
+  addressFilterSearch.value = p.address;
+  addressFilterOpen.value = false;
+  shopStore.pointsPage = 1;
+  shopStore.fetchPoints();
+}
+
+function clearFilterAddress() {
+  shopStore.pointsFilter.address = '';
+  addressFilterSearch.value = '';
+  addressFilterOpen.value = false;
+  shopStore.pointsPage = 1;
+  shopStore.fetchPoints();
+}
+
 function onPointAdd() {
   shopStore.addPoint({ ...pointToAdd.value });
   pointToAdd.value = {};
@@ -52,17 +122,91 @@ function onUpdatePoint() {
 
     <form @submit.prevent.stop="onPointAdd" class="mb-4">
       <div class="row g-2">
-        <div class="col"><div class="form-floating">
-          <input type="text" class="form-control" v-model="pointToAdd.name" required />
-          <label>Название</label>
-        </div></div>
-        <div class="col"><div class="form-floating">
-          <input type="text" class="form-control" v-model="pointToAdd.address" required />
-          <label>Адрес</label>
-        </div></div>
-        <div class="col-auto"><button class="btn btn-primary">Добавить</button></div>
+        <div class="col">
+          <div class="form-floating">
+            <input type="text" class="form-control" v-model="pointToAdd.name" required />
+            <label>Название</label>
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-floating">
+            <input type="text" class="form-control" v-model="pointToAdd.address" required />
+            <label>Адрес</label>
+          </div>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary">Добавить</button>
+        </div>
       </div>
     </form>
+
+    <div class="row mb-3">
+      <div class="col-md-6 position-relative">
+        <div class="input-group">
+          <input 
+            type="text" 
+            class="form-control" 
+            v-model="nameFilterSearch" 
+            @focus="nameFilterOpen = true" 
+            @blur="nameFilterOpen = false" 
+            placeholder="Фильтр по названию..." 
+            autocomplete="off" 
+          />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterName">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div 
+          v-if="nameFilterOpen && filteredPointsByName.length" 
+          class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
+          style="max-height: 200px; overflow-y: auto; z-index: 1000;"
+        >
+          <div 
+            v-for="p in filteredPointsByName" 
+            :key="p.id" 
+            class="px-3 py-2" 
+            style="cursor: pointer;" 
+            @mousedown.prevent="selectFilterName(p)" 
+            :class="{ 'bg-primary text-white': shopStore.pointsFilter.name === p.name }"
+          >
+            {{ p.name }}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 position-relative">
+        <div class="input-group">
+          <input 
+            type="text" 
+            class="form-control" 
+            v-model="addressFilterSearch" 
+            @focus="addressFilterOpen = true" 
+            @blur="addressFilterOpen = false" 
+            placeholder="Фильтр по адресу..." 
+            autocomplete="off" 
+          />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterAddress">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div 
+          v-if="addressFilterOpen && filteredPointsByAddress.length" 
+          class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" 
+          style="max-height: 200px; overflow-y: auto; z-index: 1000;"
+        >
+          <div 
+            v-for="p in filteredPointsByAddress" 
+            :key="p.id" 
+            class="px-3 py-2" 
+            style="cursor: pointer;" 
+            @mousedown.prevent="selectFilterAddress(p)" 
+            :class="{ 'bg-primary text-white': shopStore.pointsFilter.address === p.address }"
+          >
+            {{ p.address }}
+          </div>
+        </div>
+      </div>
+    </div>
 
     <table class="table align-middle">
       <thead>
@@ -114,24 +258,28 @@ function onUpdatePoint() {
     </nav>
 
     <div class="modal fade" id="editPointModal" tabindex="-1">
-      <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5">Редактировать</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="form-floating mb-2">
-            <input type="text" class="form-control" v-model="pointToEdit.name" /><label>Название</label>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5">Редактировать</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="form-floating mb-2">
-            <input type="text" class="form-control" v-model="pointToEdit.address" /><label>Адрес</label>
+          <div class="modal-body">
+            <div class="form-floating mb-2">
+              <input type="text" class="form-control" v-model="pointToEdit.name" />
+              <label>Название</label>
+            </div>
+            <div class="form-floating mb-2">
+              <input type="text" class="form-control" v-model="pointToEdit.address" />
+              <label>Адрес</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdatePoint">Сохранить</button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onUpdatePoint">Сохранить</button>
-        </div>
-      </div></div>
+      </div>
     </div>
   </div>
 </template>

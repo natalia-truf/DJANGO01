@@ -17,6 +17,50 @@ watch(() => shopStore.suppliersPage, () => {
   shopStore.fetchSuppliers();
 });
 
+const nameFilterSearch = ref('');
+const nameFilterOpen = ref(false);
+const filteredSuppliersByName = computed(() => {
+  const q = nameFilterSearch.value.toLowerCase();
+  if (!q) return shopStore.allSuppliers;
+  return shopStore.allSuppliers.filter(s => s.name.toLowerCase().includes(q));
+});
+function selectFilterName(s) {
+  shopStore.suppliersFilter.name = s.name;
+  nameFilterSearch.value = s.name;
+  nameFilterOpen.value = false;
+  shopStore.suppliersPage = 1;
+  shopStore.fetchSuppliers();
+}
+function clearFilterName() {
+  shopStore.suppliersFilter.name = '';
+  nameFilterSearch.value = '';
+  nameFilterOpen.value = false;
+  shopStore.suppliersPage = 1;
+  shopStore.fetchSuppliers();
+}
+
+const phoneFilterSearch = ref('');
+const phoneFilterOpen = ref(false);
+const filteredSuppliersByPhone = computed(() => {
+  const q = phoneFilterSearch.value.trim();
+  if (!q) return shopStore.allSuppliers;
+  return shopStore.allSuppliers.filter(s => String(s.phone).includes(q));
+});
+function selectFilterPhone(s) {
+  shopStore.suppliersFilter.phone = s.phone;
+  phoneFilterSearch.value = s.phone;
+  phoneFilterOpen.value = false;
+  shopStore.suppliersPage = 1;
+  shopStore.fetchSuppliers();
+}
+function clearFilterPhone() {
+  shopStore.suppliersFilter.phone = '';
+  phoneFilterSearch.value = '';
+  phoneFilterOpen.value = false;
+  shopStore.suppliersPage = 1;
+  shopStore.fetchSuppliers();
+}
+
 function onSupplierAdd() {
   shopStore.addSupplier({ ...supplierToAdd.value });
   supplierToAdd.value = {};
@@ -63,6 +107,32 @@ function onUpdateSupplier() {
         <div class="col-auto"><button class="btn btn-primary">Добавить</button></div>
       </div>
     </form>
+
+    <div class="row mb-3">
+      <div class="col-md-6 position-relative">
+        <div class="input-group">
+          <input type="text" class="form-control" v-model="nameFilterSearch" @focus="nameFilterOpen = true" @blur="nameFilterOpen = false" placeholder="Фильтр по названию..." autocomplete="off" />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterName"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div v-if="nameFilterOpen && filteredSuppliersByName.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
+          <div v-for="s in filteredSuppliersByName" :key="s.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterName(s)" :class="{ 'bg-primary text-white': shopStore.suppliersFilter.name === s.name }">
+            {{ s.name }}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 position-relative">
+        <div class="input-group">
+          <input type="text" class="form-control" v-model="phoneFilterSearch" @focus="phoneFilterOpen = true" @blur="phoneFilterOpen = false" placeholder="Фильтр по телефону..." autocomplete="off" />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterPhone"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div v-if="phoneFilterOpen && filteredSuppliersByPhone.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
+          <div v-for="s in filteredSuppliersByPhone" :key="s.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterPhone(s)" :class="{ 'bg-primary text-white': shopStore.suppliersFilter.phone === s.phone }">
+            {{ s.phone }}
+          </div>
+        </div>
+      </div>
+    </div>
 
     <table class="table align-middle">
       <thead>

@@ -23,6 +23,76 @@ watch(() => shopStore.productsPage, () => {
   shopStore.fetchProducts();
 });
 
+const nameFilterSearch = ref('');
+const nameFilterOpen = ref(false);
+const filteredProductsByName = computed(() => {
+  const q = nameFilterSearch.value.toLowerCase();
+  if (!q) return shopStore.products;
+  return shopStore.products.filter(p => p.name.toLowerCase().includes(q));
+});
+function selectFilterName(p) {
+  shopStore.productsFilter.name = p.name;
+  nameFilterSearch.value = p.name;
+  nameFilterOpen.value = false;
+  shopStore.productsPage = 1;
+  shopStore.fetchProducts();
+}
+function clearFilterName() {
+  shopStore.productsFilter.name = '';
+  nameFilterSearch.value = '';
+  nameFilterOpen.value = false;
+  shopStore.productsPage = 1;
+  shopStore.fetchProducts();
+}
+
+const filterPriceFrom = ref('');
+const filterPriceTo = ref('');
+
+let productPriceTimeout = null;
+function autoApplyPriceFilters() {
+  if (productPriceTimeout) clearTimeout(productPriceTimeout);
+  productPriceTimeout = setTimeout(() => {
+    shopStore.productsFilter.priceFrom = filterPriceFrom.value;
+    shopStore.productsFilter.priceTo = filterPriceTo.value;
+    shopStore.productsPage = 1;
+    shopStore.fetchProducts();
+  }, 500);
+}
+
+watch(filterPriceFrom, autoApplyPriceFilters);
+watch(filterPriceTo, autoApplyPriceFilters);
+
+function clearPriceFilters() {
+  filterPriceFrom.value = '';
+  filterPriceTo.value = '';
+  shopStore.productsFilter.priceFrom = '';
+  shopStore.productsFilter.priceTo = '';
+  shopStore.productsPage = 1;
+  shopStore.fetchProducts();
+}
+
+const categoryFilterSearch = ref('');
+const categoryFilterOpen = ref(false);
+const filteredCategories = computed(() => {
+  const q = categoryFilterSearch.value.toLowerCase();
+  if (!q) return shopStore.allCategories;
+  return shopStore.allCategories.filter(c => c.name.toLowerCase().includes(q));
+});
+function selectFilterCategory(c) {
+  shopStore.productsFilter.category = c.id;
+  categoryFilterSearch.value = c.name;
+  categoryFilterOpen.value = false;
+  shopStore.productsPage = 1;
+  shopStore.fetchProducts();
+}
+function clearFilterCategory() {
+  shopStore.productsFilter.category = '';
+  categoryFilterSearch.value = '';
+  categoryFilterOpen.value = false;
+  shopStore.productsPage = 1;
+  shopStore.fetchProducts();
+}
+
 function onProductAdd() {
   const fd = new FormData();
   if (productsPictureRef.value?.files[0]) fd.append('picture', productsPictureRef.value.files[0]);
@@ -81,13 +151,12 @@ function onRemoveGalleryImage(image) {
   <div class="mt-4">
     <h3 class="mb-4">Товары</h3>
 
-        <!-- Блок статистики виден админу и продавцу -->
     <div class="row mb-3" v-if="profileStore.isSuperuser || profileStore.userRole === 'seller'">
       <div class="col-md-3">
         <div class="card text-center bg-light">
           <div class="card-body">
             <h5 class="card-title">Всего товаров</h5>
-            <p class="card-text fs-4">{{ shopStore.productsStats.count }}</p>
+            <p class="card-text fs-4">{{ shopStore.productsStats.count || 0 }}</p>
           </div>
         </div>
       </div>
@@ -95,7 +164,7 @@ function onRemoveGalleryImage(image) {
         <div class="card text-center bg-light">
           <div class="card-body">
             <h5 class="card-title">Средняя цена</h5>
-            <p class="card-text fs-4">{{ shopStore.productsStats.avg_price?.toFixed(2) }} руб.</p>
+            <p class="card-text fs-4">{{ Number(shopStore.productsStats.avg_price || 0).toFixed(2) }} руб.</p>
           </div>
         </div>
       </div>
@@ -103,7 +172,7 @@ function onRemoveGalleryImage(image) {
         <div class="card text-center bg-light">
           <div class="card-body">
             <h5 class="card-title">Макс. цена</h5>
-            <p class="card-text fs-4">{{ shopStore.productsStats.max_price }} руб.</p>
+            <p class="card-text fs-4">{{ shopStore.productsStats.max_price || 0 }} руб.</p>
           </div>
         </div>
       </div>
@@ -111,7 +180,7 @@ function onRemoveGalleryImage(image) {
         <div class="card text-center bg-light">
           <div class="card-body">
             <h5 class="card-title">Мин. цена</h5>
-            <p class="card-text fs-4">{{ shopStore.productsStats.min_price }} руб.</p>
+            <p class="card-text fs-4">{{ shopStore.productsStats.min_price || 0 }} руб.</p>
           </div>
         </div>
       </div>
@@ -136,19 +205,60 @@ function onRemoveGalleryImage(image) {
         </div>
         <div class="col-auto"><div class="form-floating">
           <select class="form-select" v-model="productToAdd.category_id" required>
-            <option :value="c.id" v-for="c in shopStore.categories" :key="c.id">{{ c.name }}</option>
+            <option :value="c.id" v-for="c in shopStore.allCategories" :key="c.id">{{ c.name }}</option>
           </select>
           <label>Категория</label>
         </div></div>
         <div class="col-auto"><div class="form-floating">
           <select class="form-select" v-model="productToAdd.supplier_id" required>
-            <option :value="s.id" v-for="s in shopStore.suppliers" :key="s.id">{{ s.name }}</option>
+            <option :value="s.id" v-for="s in shopStore.allSuppliers" :key="s.id">{{ s.name }}</option>
           </select>
           <label>Поставщик</label>
         </div></div>
         <div class="col-auto"><button class="btn btn-primary">Добавить</button></div>
       </div>
     </form>
+
+    <div class="row mb-3 g-2 align-items-end">
+      <div class="col-md-3 position-relative">
+        <div class="input-group">
+          <input type="text" class="form-control" v-model="nameFilterSearch" @focus="nameFilterOpen = true" @blur="nameFilterOpen = false" placeholder="Название..." autocomplete="off" />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterName"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div v-if="nameFilterOpen && filteredProductsByName.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
+          <div v-for="p in filteredProductsByName" :key="p.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterName(p)">
+            {{ p.name }}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-2">
+        <div class="input-group">
+          <span class="input-group-text">От</span>
+          <input type="number" step="0.01" class="form-control" v-model="filterPriceFrom" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="col-md-2">
+        <div class="input-group">
+          <span class="input-group-text">До</span>
+          <input type="number" step="0.01" class="form-control" v-model="filterPriceTo" placeholder="99999" />
+          <button class="btn btn-outline-secondary" type="button" @click="clearPriceFilters"><i class="bi bi-x-lg"></i></button>
+        </div>
+      </div>
+
+      <div class="col-md-3 position-relative">
+        <div class="input-group">
+          <input type="text" class="form-control" v-model="categoryFilterSearch" @focus="categoryFilterOpen = true" @blur="categoryFilterOpen = false" placeholder="Категория..." autocomplete="off" />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterCategory"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div v-if="categoryFilterOpen && filteredCategories.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
+          <div v-for="c in filteredCategories" :key="c.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterCategory(c)" :class="{ 'bg-primary text-white': shopStore.productsFilter.category === c.id }">
+            {{ c.name }}
+          </div>
+        </div>
+      </div>
+    </div>
 
     <table class="table align-middle">
       <thead>
@@ -230,12 +340,12 @@ function onRemoveGalleryImage(image) {
           </div>
           <div class="form-floating mb-2">
             <select class="form-select" v-model="productToEdit.category_id">
-              <option :value="c.id" v-for="c in shopStore.categories" :key="c.id">{{ c.name }}</option>
+              <option :value="c.id" v-for="c in shopStore.allCategories" :key="c.id">{{ c.name }}</option>
             </select><label>Категория</label>
           </div>
           <div class="form-floating mb-2">
             <select class="form-select" v-model="productToEdit.supplier_id">
-              <option :value="s.id" v-for="s in shopStore.suppliers" :key="s.id">{{ s.name }}</option>
+              <option :value="s.id" v-for="s in shopStore.allSuppliers" :key="s.id">{{ s.name }}</option>
             </select><label>Поставщик</label>
           </div>
           <input type="file" class="form-control" ref="productEditPictureRef" />

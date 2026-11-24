@@ -11,12 +11,32 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         fake = Faker(['ru_RU'])
 
+        if not Category.objects.exists():
+            category_names = ['Одежда', 'Обувь', 'Аксессуары', 'Спорт', 'Дом']
+            for name in tqdm(category_names, desc="Генерация категорий"):
+                Category.objects.create(name=name)
+        
+        if not Supplier.objects.exists():
+            for _ in tqdm(range(10), desc="Генерация поставщиков"):
+                Supplier.objects.create(
+                    name=fake.company(),
+                    phone=fake.phone_number()
+                )
+
+        if not PointOfSale.objects.exists():
+            for _ in tqdm(range(5), desc="Генерация точек продаж"):
+                PointOfSale.objects.create(
+                    name=f"Магазин {fake.street_name()}",
+                    address=fake.address()
+                )
+
         categories = list(Category.objects.all())
         suppliers = list(Supplier.objects.all())
         users = list(User.objects.all())
+        points = list(PointOfSale.objects.all())
 
-        if not categories:
-            self.stdout.write(self.style.ERROR('Нет категорий! Сначала создайте категории.'))
+        if not categories or not suppliers or not points:
+            self.stdout.write(self.style.ERROR('Не хватает данных для генерации!'))
             return
 
         product_names = ['Футболка', 'Джинсы', 'Платье', 'Куртка', 'Свитер', 'Рубашка', 'Шорты', 'Юбка', 'Костюм']
@@ -39,7 +59,6 @@ class Command(BaseCommand):
             )
 
         products = list(Product.objects.all())
-        points = list(PointOfSale.objects.all())
 
         for _ in tqdm(range(1000), desc="Генерация заказов"):
             Order.objects.create(
@@ -49,4 +68,4 @@ class Command(BaseCommand):
                 quantity=random.randint(1, 5)
             )
             
-        self.stdout.write(self.style.SUCCESS('Успешно сгенерировано 1000 товаров и 1000 заказов!'))
+        self.stdout.write(self.style.SUCCESS('Успешно сгенерировано всё необходимое!'))

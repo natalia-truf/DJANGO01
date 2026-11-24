@@ -1,13 +1,113 @@
 <script setup>
 import useShopStore from '@/stores/shopStore';
-import useProfileStore from '@/stores/profileStore';
 import { ref, computed, watch } from 'vue';
 
 const shopStore = useShopStore();
-const profileStore = useProfileStore();
 
 const orderToAdd = ref({});
 const orderToEdit = ref({});
+
+const uniquePoints = computed(() => {
+  const seen = new Set();
+  return shopStore.allPoints.filter(pt => {
+    const name = String(pt.name).toLowerCase().trim();
+    if (seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
+});
+
+const filterProductSearch = ref('');
+const filterProductOpen = ref(false);
+const filteredFilterProducts = computed(() => {
+  const q = filterProductSearch.value.toLowerCase();
+  if (!q) return shopStore.products;
+  return shopStore.products.filter(p => p.name.toLowerCase().includes(q));
+});
+
+function selectFilterProduct(p) {
+  shopStore.ordersFilter.product = p.name;
+  filterProductSearch.value = p.name;
+  filterProductOpen.value = false;
+  shopStore.ordersPage = 1;
+  shopStore.fetchOrders();
+}
+
+function clearFilterProduct() {
+  shopStore.ordersFilter.product = '';
+  filterProductSearch.value = '';
+  filterProductOpen.value = false;
+  shopStore.ordersPage = 1;
+  shopStore.fetchOrders();
+}
+
+const filterPointSearch = ref('');
+const filterPointOpen = ref(false);
+const filteredFilterPoints = computed(() => {
+  const q = filterPointSearch.value.toLowerCase();
+  if (!q) return uniquePoints.value;
+  return uniquePoints.value.filter(pt => pt.name.toLowerCase().includes(q));
+});
+
+function selectFilterPoint(pt) {
+  shopStore.ordersFilter.point = pt.name;
+  filterPointSearch.value = pt.name;
+  filterPointOpen.value = false;
+  shopStore.ordersPage = 1;
+  shopStore.fetchOrders();
+}
+
+function clearFilterPoint() {
+  shopStore.ordersFilter.point = '';
+  filterPointSearch.value = '';
+  filterPointOpen.value = false;
+  shopStore.ordersPage = 1;
+  shopStore.fetchOrders();
+}
+
+const filterOrderId = ref('');
+const filterQuantity = ref('');
+const filterPriceFrom = ref('');
+const filterPriceTo = ref('');
+
+let searchTimeout = null;
+function autoApplyFilters() {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  
+  searchTimeout = setTimeout(() => {
+    shopStore.ordersFilter.orderId = filterOrderId.value;
+    shopStore.ordersFilter.quantity = filterQuantity.value;
+    shopStore.ordersFilter.totalPriceFrom = filterPriceFrom.value;
+    shopStore.ordersFilter.totalPriceTo = filterPriceTo.value;
+    
+    shopStore.ordersPage = 1;
+    shopStore.fetchOrders();
+  }, 500);
+}
+
+watch(filterOrderId, autoApplyFilters);
+watch(filterQuantity, autoApplyFilters);
+watch(filterPriceFrom, autoApplyFilters);
+watch(filterPriceTo, autoApplyFilters);
+
+function resetAllFilters() {
+  filterOrderId.value = '';
+  filterQuantity.value = '';
+  filterPriceFrom.value = '';
+  filterPriceTo.value = '';
+  filterProductSearch.value = '';
+  filterPointSearch.value = '';
+  
+  shopStore.ordersFilter.product = '';
+  shopStore.ordersFilter.point = '';
+  shopStore.ordersFilter.orderId = '';
+  shopStore.ordersFilter.quantity = '';
+  shopStore.ordersFilter.totalPriceFrom = '';
+  shopStore.ordersFilter.totalPriceTo = '';
+  
+  shopStore.ordersPage = 1;
+  shopStore.fetchOrders();
+}
 
 const pagesCount = computed(() => {
   return Math.trunc(shopStore.ordersTotalCount / shopStore.pageItemsCount) + 1;
@@ -71,7 +171,7 @@ function onUpdateOrder() {
     </div>
 
     <form @submit.prevent.stop="onOrderAdd" class="mb-4">
-      <div class="row g-2">
+      <div class="row g-2 align-items-end">
         <div class="col">
           <div class="form-floating">
             <select class="form-select" v-model="orderToAdd.product_id" required>
@@ -83,7 +183,7 @@ function onUpdateOrder() {
         <div class="col">
           <div class="form-floating">
             <select class="form-select" v-model="orderToAdd.point_id" required>
-              <option :value="pt.id" v-for="pt in shopStore.points" :key="pt.id">{{ pt.name }}</option>
+              <option :value="pt.id" v-for="pt in shopStore.allPoints" :key="pt.id">{{ pt.name }}</option>
             </select>
             <label>Точка продажи</label>
           </div>
@@ -99,6 +199,54 @@ function onUpdateOrder() {
         </div>
       </div>
     </form>
+
+    <div class="row mb-3 g-2 align-items-end">
+      <div class="col-md-3 position-relative">
+        <div class="input-group">
+          <input type="text" class="form-control" v-model="filterProductSearch" @focus="filterProductOpen = true" @blur="filterProductOpen = false" placeholder="Товар..." autocomplete="off" />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterProduct"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div v-if="filterProductOpen && filteredFilterProducts.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
+          <div v-for="p in filteredFilterProducts" :key="p.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterProduct(p)" :class="{ 'bg-primary text-white': shopStore.ordersFilter.product === p.id }">
+            {{ p.name }}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3 position-relative">
+        <div class="input-group">
+          <input type="text" class="form-control" v-model="filterPointSearch" @focus="filterPointOpen = true" @blur="filterPointOpen = false" placeholder="Точка продажи..." autocomplete="off" />
+          <button class="btn btn-outline-secondary" type="button" @click="clearFilterPoint"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div v-if="filterPointOpen && filteredFilterPoints.length" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
+          <div v-for="pt in filteredFilterPoints" :key="pt.id" class="px-3 py-2" style="cursor: pointer;" @mousedown.prevent="selectFilterPoint(pt)" :class="{ 'bg-primary text-white': shopStore.ordersFilter.point === pt.id }">
+            {{ pt.name }}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-2">
+        <input type="text" class="form-control" v-model="filterOrderId" placeholder="№ заказа..." />
+      </div>
+
+      <div class="col-md-2">
+        <input type="text" class="form-control" v-model="filterQuantity" placeholder="Кол-во..." />
+      </div>
+
+      <div class="col-md-1">
+        <div class="input-group">
+          <span class="input-group-text">От</span>
+          <input type="number" class="form-control" v-model="filterPriceFrom" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="col-md-1">
+        <div class="input-group">
+          <span class="input-group-text">До</span>
+          <input type="number" class="form-control" v-model="filterPriceTo" placeholder="9999" />
+        </div>
+      </div>
+    </div>
 
     <table class="table align-middle">
       <thead>
@@ -117,15 +265,11 @@ function onUpdateOrder() {
           <td>{{ order.product?.name || 'Удален' }}</td>
           <td>{{ order.point?.name || 'Удалена' }}</td>
           <td class="text-end">{{ order.quantity }}</td>
-          <td class="text-end">{{ order.total_price }} руб.</td> <!-- ВЫВОДИМ СУММУ -->
+          <td class="text-end">{{ order.total_price }} руб.</td>
           <td class="text-center">
             <div class="d-flex gap-2 justify-content-center">
-              <button class="btn btn-success btn-sm" @click="onOrderEditClick(order)" data-bs-toggle="modal" data-bs-target="#editOrderModal">
-                <i class="bi bi-pen-fill"></i>
-              </button>
-              <button class="btn btn-danger btn-sm" @click="onRemoveClick(order)">
-                <i class="bi bi-x"></i>
-              </button>
+              <button class="btn btn-success btn-sm" @click="onOrderEditClick(order)" data-bs-toggle="modal" data-bs-target="#editOrderModal"><i class="bi bi-pen-fill"></i></button>
+              <button class="btn btn-danger btn-sm" @click="onRemoveClick(order)"><i class="bi bi-x"></i></button>
             </div>
           </td>
         </tr>
@@ -134,24 +278,12 @@ function onUpdateOrder() {
 
     <nav aria-label="Page navigation" v-if="shopStore.ordersTotalCount > 10">
       <ul class="pagination justify-content-center">
-        <li class="page-item" @click="shopStore.ordersPage -= 1" :class="{ disabled: shopStore.ordersPage === 1 }">
-          <a class="page-link" href="#">Previous</a>
-        </li>
-        <li @click="shopStore.ordersPage = shopStore.ordersPage - 1" class="page-item" v-if="shopStore.ordersPage - 1 > 0">
-          <a class="page-link">{{ shopStore.ordersPage - 1 }}</a>
-        </li>
-        <li class="page-item active" v-if="shopStore.ordersPage > 0">
-          <span class="page-link">{{ shopStore.ordersPage }}</span>
-        </li>
-        <li @click="shopStore.ordersPage = shopStore.ordersPage + 1" class="page-item" v-if="shopStore.ordersPage + 1 < pagesCount">
-          <a class="page-link">{{ shopStore.ordersPage + 1 }}</a>
-        </li>
-        <li @click="shopStore.ordersPage = shopStore.ordersPage + 2" class="page-item" v-if="shopStore.ordersPage + 2 < pagesCount">
-          <a class="page-link">{{ shopStore.ordersPage + 2 }}</a>
-        </li>
-        <li class="page-item" @click="shopStore.ordersPage += 1" :class="{ disabled: shopStore.ordersPage === pagesCount }">
-          <a class="page-link" href="#">Next</a>
-        </li>
+        <li class="page-item" @click="shopStore.ordersPage -= 1" :class="{ disabled: shopStore.ordersPage === 1 }"><a class="page-link" href="#">Previous</a></li>
+        <li @click="shopStore.ordersPage = shopStore.ordersPage - 1" class="page-item" v-if="shopStore.ordersPage - 1 > 0"><a class="page-link">{{ shopStore.ordersPage - 1 }}</a></li>
+        <li class="page-item active" v-if="shopStore.ordersPage > 0"><span class="page-link">{{ shopStore.ordersPage }}</span></li>
+        <li @click="shopStore.ordersPage = shopStore.ordersPage + 1" class="page-item" v-if="shopStore.ordersPage + 1 < pagesCount"><a class="page-link">{{ shopStore.ordersPage + 1 }}</a></li>
+        <li @click="shopStore.ordersPage = shopStore.ordersPage + 2" class="page-item" v-if="shopStore.ordersPage + 2 < pagesCount"><a class="page-link">{{ shopStore.ordersPage + 2 }}</a></li>
+        <li class="page-item" @click="shopStore.ordersPage += 1" :class="{ disabled: shopStore.ordersPage === pagesCount }"><a class="page-link" href="#">Next</a></li>
       </ul>
     </nav>
 
@@ -171,7 +303,7 @@ function onUpdateOrder() {
             </div>
             <div class="form-floating mb-2">
               <select class="form-select" v-model="orderToEdit.point_id">
-                <option :value="pt.id" v-for="pt in shopStore.points" :key="pt.id">{{ pt.name }}</option>
+                <option :value="pt.id" v-for="pt in uniquePoints" :key="pt.id">{{ pt.name }}</option>
               </select>
               <label>Точка продажи</label>
             </div>
