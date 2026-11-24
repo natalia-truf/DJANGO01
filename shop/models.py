@@ -12,6 +12,7 @@ class Profile(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Пользователь")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='buyer', verbose_name="Роль")
+    otp_key = models.CharField(max_length=32, blank=True, default='', verbose_name="OTP ключ")
 
     class Meta:
         verbose_name = "Профиль"

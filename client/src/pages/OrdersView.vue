@@ -1,12 +1,18 @@
 <script setup>
 import useShopStore from '@/stores/shopStore';
+import useProfileStore from '@/stores/profileStore';
 import { ref, computed, watch } from 'vue';
 import axios from 'axios';
+import OtpModal from '@/components/OtpModal.vue';
 
 const shopStore = useShopStore();
+const profileStore = useProfileStore();
 
 const orderToAdd = ref({});
 const orderToEdit = ref({});
+
+const showOtpModal = ref(false);
+const pendingAction = ref(null);
 
 const uniquePoints = computed(() => {
   const seen = new Set();
@@ -144,7 +150,12 @@ function onOrderAdd() {
 }
 
 function onRemoveClick(order) {
-  shopStore.removeOrder(order.id);
+  if (!profileStore.otpVerified) {
+    pendingAction.value = { type: 'delete', order };
+    showOtpModal.value = true;
+  } else {
+    shopStore.removeOrder(order.id);
+  }
 }
 
 function onOrderEditClick(order) {
@@ -156,7 +167,23 @@ function onOrderEditClick(order) {
 }
 
 function onUpdateOrder() {
-  shopStore.updateOrder(orderToEdit.value.id, { ...orderToEdit.value });
+  if (!profileStore.otpVerified) {
+    pendingAction.value = { type: 'update' };
+    showOtpModal.value = true;
+  } else {
+    shopStore.updateOrder(orderToEdit.value.id, { ...orderToEdit.value });
+  }
+}
+
+function onOtpSuccess() {
+  if (pendingAction.value) {
+    if (pendingAction.value.type === 'delete') {
+      shopStore.removeOrder(pendingAction.value.order.id);
+    } else if (pendingAction.value.type === 'update') {
+      shopStore.updateOrder(orderToEdit.value.id, { ...orderToEdit.value });
+    }
+    pendingAction.value = null;
+  }
 }
 </script>
 
@@ -346,5 +373,12 @@ function onUpdateOrder() {
         </div>
       </div>
     </div>
+
+    <OtpModal 
+      v-model="showOtpModal" 
+      title="Подтверждение действия"
+      @success="onOtpSuccess"
+    />
+
   </div>
 </template>

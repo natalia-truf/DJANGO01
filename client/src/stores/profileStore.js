@@ -8,6 +8,8 @@ const useProfileStore = defineStore('profileStore', () => {
     const userName = ref(null);
     const userRole = ref(null);
     const isSuperuser = ref(false);
+    const otpEnabled = ref(false);
+    const otpVerified = ref(false);
     
     async function fetchMe() {
         const r = await axios.get("/api/profile/me/");
@@ -16,6 +18,7 @@ const useProfileStore = defineStore('profileStore', () => {
         userName.value = r.data.is_authenticated ? r.data.username : null;
         userRole.value = r.data.is_authenticated ? r.data.role : null;
         isSuperuser.value = r.data.is_authenticated ? r.data.is_superuser : false;
+        otpEnabled.value = r.data.is_authenticated ? (r.data.otp_enabled || false) : false;
     }
 
     async function login(username, password) {
@@ -27,15 +30,44 @@ const useProfileStore = defineStore('profileStore', () => {
         await axios.post("/api/profile/logout/")
         await fetchMe();
     }
+    
+    async function checkOtpStatus() {
+        const r = await axios.get("/api/profile/otp-status/");
+        otpVerified.value = r.data.otp_good;
+        return otpVerified.value;
+    }
+
+    async function verifyOtp(code) {
+        const r = await axios.post("/api/profile/otp-login/", { key: code });
+        if (r.data.success) {
+            otpVerified.value = true;
+        }
+        return r.data.success;
+    }
+
+    async function setupOtp() {
+        const r = await axios.get("/api/profile/otp-setup/");
+        return r.data;
+    }
+
+    async function disableOtp() {
+        await axios.post("/api/profile/otp-disable/");
+        otpEnabled.value = false;
+        otpVerified.value = false;
+    }
 
     onBeforeMount(() => {
         fetchMe();
+        if (isAuthenticated.value) {
+            checkOtpStatus();
+        }
     })
 
     return {
-    isAuthenticated, userName, userRole, isSuperuser,
-    fetchMe, login, logout,
-}
+        isAuthenticated, userName, userRole, isSuperuser, otpEnabled, otpVerified,
+        fetchMe, login, logout,
+        checkOtpStatus, verifyOtp, setupOtp, disableOtp,
+    }
 })
 
 export default useProfileStore;

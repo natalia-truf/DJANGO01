@@ -6,7 +6,7 @@ from django.conf import settings
 
 from shop.api import (
     CategoryViewSet, SupplierViewSet, PointOfSaleViewSet,
-    ProductViewSet, ProductImageViewSet, OrderViewSet, ProfileViewSet
+    ProductViewSet, ProductImageViewSet, OrderViewSet, UserProfileViewSet
 )
 
 router = DefaultRouter()
@@ -16,7 +16,7 @@ router.register('points', PointOfSaleViewSet, 'points')
 router.register('products', ProductViewSet, 'products')
 router.register('productimages', ProductImageViewSet, 'productimages')
 router.register('orders', OrderViewSet, 'orders')
-router.register('profile', ProfileViewSet, 'profile')
+router.register('profile', UserProfileViewSet, 'profile')
 
 urlpatterns = [
     path('api/', include(router.urls)),
