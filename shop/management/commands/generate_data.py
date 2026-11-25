@@ -12,7 +12,7 @@ class Command(BaseCommand):
         fake = Faker(['ru_RU'])
 
         if not Category.objects.exists():
-            category_names = ['Одежда', 'Обувь', 'Аксессуары', 'Спорт', 'Дом']
+            category_names = ['Футболки', 'Джинсы', 'Платья', 'Верхняя одежда', 'Аксессуары', 'Обувь', 'Спортивная одежда']
             for name in tqdm(category_names, desc="Генерация категорий"):
                 Category.objects.create(name=name)
         

@@ -413,6 +413,25 @@ class UserProfileViewSet(GenericViewSet):
             'manual_key': otp_key
         })
 
+    @action(detail=False, url_path="register", methods=['POST'], permission_classes=[])
+    def register(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        role = request.data.get('role', 'buyer')
+    
+        if not username or not password:
+            return Response({'error': 'Логин и пароль обязательны'}, status=400)
+    
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'Пользователь с таким логином уже существует'}, status=400)
+    
+        user = User.objects.create_user(username=username, password=password)
+        Profile.objects.create(user=user, role=role)
+    
+        django_login(request, user)
+                
+        return Response({'success': True, 'message': 'Регистрация успешна'}, status=201)
+
     @action(detail=False, url_path="otp-disable", methods=['POST'])
     def otp_disable(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

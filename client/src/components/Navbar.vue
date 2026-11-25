@@ -1,12 +1,15 @@
 <script setup>
 import useProfileStore from '@/stores/profileStore';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 
 const profileStore = useProfileStore();
-const { isAuthenticated, userName } = storeToRefs(profileStore)
+const router = useRouter();
+const { isAuthenticated, userName } = storeToRefs(profileStore);
 
 async function onLogoutButtonClick() {
-    profileStore.logout();
+    await profileStore.logout();
+    router.push('/login');
 }
 </script>
 

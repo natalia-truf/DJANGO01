@@ -10,6 +10,7 @@ const useProfileStore = defineStore('profileStore', () => {
     const isSuperuser = ref(false);
     const otpEnabled = ref(false);
     const otpVerified = ref(false);
+    const isLoaded = ref(false);
     
     async function fetchMe() {
         const r = await axios.get("/api/profile/me/");
@@ -19,6 +20,7 @@ const useProfileStore = defineStore('profileStore', () => {
         userRole.value = r.data.is_authenticated ? r.data.role : null;
         isSuperuser.value = r.data.is_authenticated ? r.data.is_superuser : false;
         otpEnabled.value = r.data.is_authenticated ? (r.data.otp_enabled || false) : false;
+        isLoaded.value = true;
     }
 
     async function login(username, password) {
@@ -30,7 +32,7 @@ const useProfileStore = defineStore('profileStore', () => {
         await axios.post("/api/profile/logout/")
         await fetchMe();
     }
-    
+
     async function checkOtpStatus() {
         const r = await axios.get("/api/profile/otp-status/");
         otpVerified.value = r.data.otp_good;
@@ -64,7 +66,7 @@ const useProfileStore = defineStore('profileStore', () => {
     })
 
     return {
-        isAuthenticated, userName, userRole, isSuperuser, otpEnabled, otpVerified,
+        isAuthenticated, userName, userRole, isSuperuser, otpEnabled, otpVerified, isLoaded,
         fetchMe, login, logout,
         checkOtpStatus, verifyOtp, setupOtp, disableOtp,
     }

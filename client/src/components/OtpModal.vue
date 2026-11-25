@@ -27,34 +27,28 @@ async function onSubmit() {
   errorMessage.value = '';
   isLoading.value = true;
   
-  try {
-    const success = await profileStore.verifyOtp(otpCode.value);
-    if (success) {
-      isOpen.value = false;
-      otpCode.value = '';
-      emit('success');
-    } else {
-      errorMessage.value = 'Неверный код. Попробуйте ещё раз.';
-    }
-  } catch (error) {
-    errorMessage.value = 'Ошибка проверки кода';
-  } finally {
-    isLoading.value = false;
+  const success = await profileStore.verifyOtp(otpCode.value);
+  
+  if (success) {
+    isOpen.value = false;
+    otpCode.value = '';
+    emit('success');
+  } else {
+    errorMessage.value = 'Неверный код. Попробуйте ещё раз.';
   }
+  
+  isLoading.value = false;
 }
 
 async function onSetup() {
   isLoading.value = true;
-  try {
-    const data = await profileStore.setupOtp();
-    qrCode.value = data.qr_code;
-    manualKey.value = data.manual_key;
-    isSetupMode.value = true;
-  } catch (error) {
-    errorMessage.value = 'Ошибка генерации ключа';
-  } finally {
-    isLoading.value = false;
-  }
+  
+  const data = await profileStore.setupOtp();
+  qrCode.value = data.qr_code;
+  manualKey.value = data.manual_key;
+  isSetupMode.value = true;
+  
+  isLoading.value = false;
 }
 
 function closeModal() {
@@ -83,10 +77,10 @@ watch(isOpen, (val) => {
           <h5 class="modal-title">{{ title }}</h5>
           <button type="button" class="btn-close" @click="closeModal"></button>
         </div>
+        
         <div class="modal-body">
-          <!-- Режим настройки OTP (показывает QR-код) -->
           <div v-if="isSetupMode">
-            <p>Отсканируйте QR-код в приложении Google Authenticator:</p>
+            <p>Отсканируйте QR-код в Google Authenticator:</p>
             <div class="text-center mb-3">
               <img :src="qrCode" alt="QR Code" class="img-fluid border rounded p-2" style="max-width: 250px;" />
             </div>
@@ -94,12 +88,11 @@ watch(isOpen, (val) => {
             <div class="alert alert-info text-center font-monospace">
               {{ manualKey }}
             </div>
-            <p class="text-muted small">После настройки приложения введите 6-значный код ниже:</p>
+            <p class="text-muted small">После настройки введите 6-значный код ниже:</p>
           </div>
 
-          <!-- Режим ввода кода -->
           <div v-else>
-            <p>Введите 6-значный код из приложения-аутентификатора:</p>
+            <p>Введите 6-значный код из приложения:</p>
           </div>
 
           <div v-if="errorMessage" class="alert alert-danger mt-2">
@@ -114,12 +107,12 @@ watch(isOpen, (val) => {
               class="form-control text-center fs-4" 
               placeholder="000000"
               inputmode="numeric"
-              pattern="[0-9]*"
               @keyup.enter="onSubmit"
               :disabled="isLoading"
             />
           </div>
         </div>
+        
         <div class="modal-footer">
           <button v-if="!isSetupMode" type="button" class="btn btn-outline-secondary" @click="onSetup">
             Настроить OTP
@@ -132,5 +125,6 @@ watch(isOpen, (val) => {
       </div>
     </div>
   </div>
+  
   <div v-if="isOpen" class="modal-backdrop fade show"></div>
 </template>
